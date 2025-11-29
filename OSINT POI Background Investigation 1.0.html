@@ -1,0 +1,3509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSINT Background Check Methodology — Interactive Manual</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card-bg: #111827;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --danger: #f97373;
+      --border: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --note-bg: #020617;
+      --note-border: #1e293b;
+      --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.45);
+      --radius-lg: 14px;
+    }
+
+/* Make all user-entry inputs match textarea styling */
+input,
+textarea {
+  background: #020617 !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--note-border) !important;
+  border-radius: 8px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar navigation */
+    #sidebar {
+      width: 270px;
+      background: rgba(15, 23, 42, 0.95);
+      border-right: 1px solid var(--border);
+      padding: 18px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    #sidebar h1 {
+      font-size: 1.1rem;
+      margin: 0 0 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    #sidebar h2 {
+      font-size: 1.35rem;
+      margin: 6px 0 14px;
+    }
+
+    #sidebar small {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .nav-section-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin: 14px 0 6px;
+    }
+
+    #nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    #nav-list li {
+      margin-bottom: 4px;
+    }
+
+    #nav-list a {
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--text-main);
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+      cursor: pointer;
+    }
+
+    #nav-list a:hover {
+      background: rgba(15, 118, 255, 0.14);
+      border-color: rgba(37, 99, 235, 0.7);
+      transform: translateX(1px);
+    }
+
+/* Disable active highlight */
+#nav-list a.active {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+    .nav-sub {
+      margin-left: 14px;
+      font-size: 0.85rem;
+    }
+
+    /* Top actions in sidebar */
+    .sidebar-actions {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      margin: 2px 0;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, #020617, #020617);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .btn.primary {
+      border-color: var(--accent);
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.3), #020617 60%);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.23), #020617 60%);
+    }
+
+    .btn span.icon {
+      font-size: 1rem;
+    }
+
+    /* Main content */
+    #main {
+      flex: 1;
+      padding: 20px 24px 40px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      max-width: 980px;
+      margin: 0 auto 18px;
+    }
+
+    .page-title {
+      font-size: 1.7rem;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .section-card { scroll-margin-top: 80px;
+      max-width: 980px;
+      margin: 0 auto 14px;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .section-inner {
+      padding: 12px 16px 14px;
+    }
+
+    details.section-toggle {
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+
+    details.section-toggle[open] .section-summary {
+      border-bottom: 1px solid rgba(55, 65, 81, 0.7);
+      margin-bottom: 10px;
+    }
+
+    .section-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 10px 16px 10px;
+      background: linear-gradient(120deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.99));
+    }
+
+    .section-summary-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.4), rgba(15, 23, 42, 0.9));
+      font-size: 1rem;
+    }
+
+    .section-title-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-title-main {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .section-title-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .section-chevron {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    h3 {
+      margin: 10px 0 6px;
+      font-size: 0.98rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    p, li {
+      font-size: 0.9rem;
+      line-height: 1.45;
+      color: var(--text-main);
+    }
+
+    ul {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+    }
+
+    a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .callout {
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin: 6px 0 8px;
+      font-size: 0.86rem;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .callout-label {
+      font-weight: 600;
+    }
+
+    .callout.tip {
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .callout.warn {
+      background: rgba(248, 113, 113, 0.06);
+      border: 1px solid rgba(248, 113, 113, 0.6);
+    }
+
+    .callout.tool {
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(59, 130, 246, 0.6);
+    }
+
+    .notes-box {
+      margin-top: 8px;
+      padding: 8px 10px 10px;
+      border-radius: 10px;
+      background: var(--note-bg);
+      border: 1px solid var(--note-border);
+    }
+
+    .notes-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .notes-label-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notes-label-left span.icon {
+      font-size: 0.9rem;
+    }
+
+    textarea.section-notes {
+      width: 100%;
+      min-height: 90px;
+      max-height: 260px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--note-border);
+      resize: vertical;
+      background: #020617;
+      color: var(--text-main);
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+    }
+
+    .notes-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+
+      #sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        display: block;
+      }
+
+      #main {
+        padding: 16px 14px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>OSINT Manual</h1>
+
+
+    <div class="nav-section-label">Core Workflow for POI</div>
+<ul id="nav-list">
+  <li><a href="#sec-opsec">OPSEC & Safety</a></li>
+  <li><a href="#sec-0">0. Scope & Rules</a></li>
+  <li><a href="#sec-1">1. Target Identification</a></li>
+  <li><a href="#sec-2">2. Identity Verification</a></li>
+  <li><a href="#sec-3">3. Social Media Discovery</a></li>
+  <li><a href="#sec-3a">3A. Deep Social Attribution</a></li>
+  <li><a href="#sec-4">4. Image & Video OSINT</a></li>
+  <li><a href="#sec-5">5. Phone OSINT</a></li>
+  <li><a href="#sec-6">6. Breach & Exposure</a></li>
+  <li><a href="#sec-7">7. Employment & Education</a></li>
+  <li><a href="#sec-8">8. Location & Property</a></li>
+  <li><a href="#sec-9">9. Business & Legal</a></li>
+  <li><a href="#sec-10">10. Threat & Dark-Web</a></li>
+  <li><a href="#sec-11">11. Reputation & Sentiment</a></li>
+  <li><a href="#sec-12">12. Advanced Search</a></li>
+  <li><a href="#sec-13">13. Link Analysis & Reporting</a></li>
+  <li><a href="#sec-app-a">Appendix A – Tool Index</a></li>
+  <li><a href="#sec-app-b">Appendix B – Misc, Training &amp; Utilities</a></li>
+  <li><a href="#sec-app-c">Appendix C – Google Dorking Library</a></li>
+  <li><a href="#sec-app-d">Appendix D – Report Template</a></li>
+  <li><a href="#sec-app-e">Appendix E – Risk Scoring Model</a></li>
+  <li><a href="#sec-app-g">Appendix F – Geolocation & Metadata Workbook</a></li>
+  <li><a href="#sec-app-h">Appendix G – AI‑Assisted OSINT Workflow</a></li>
+</ul>
+
+    <div class="sidebar-actions">
+      <button class="btn" id="btn-expand-all"><span class="icon">➕</span><span>Expand All</span></button>
+      <button class="btn" id="btn-collapse-all"><span class="icon">➖</span><span>Collapse All</span></button>
+      <button class="btn primary" id="btn-export-notes"><span class="icon">📤</span><span>Export All Notes</span></button>
+      <button class="btn" id="btn-clear-notes"><span class="icon">🧹</span><span>Clear Notes</span></button>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header class="page-header">
+      <div class="page-title">🕵️ OSINT Background Check Methodology For POI</div>
+      <p class="page-subtitle">Professional edition, interactive HTML, with per-section notes and local-only storage.</p>
+      <div class="badge"><span class="dot"></span> Offline-friendly &amp; investigator-focused</div>
+    </header>
+
+    <!-- SECTION 0 -->
+    <!-- OPSEC MOVED TO TOP -->
+<section id="sec-opsec" class="section-card">
+  <details class="section-toggle">
+    <summary class="section-summary">
+      <div class="section-summary-left">
+        <div class="section-icon">🛡️</div>
+        <div class="section-title-text">
+          <span class="section-title-main">OPSEC & Investigator Safety</span>
+          <span class="section-title-sub">Identity separation, infrastructure security, trace minimization, safe research.</span>
+        </div>
+      </div>
+      <div class="section-chevron">▼</div>
+    </summary>
+
+    <div class="opsec-banner" style="background:#1e3a8a;color:#fff;padding:12px;border-radius:6px;margin:10px 0;font-weight:600;text-align:center;border:1px solid #3b82f6;">
+      🔐 OPSEC NOTICE — Operational Identity Protection Required
+    </div>
+
+    <div class="section-inner">
+
+      <h3>OPSEC 1 — Investigator Identity Separation</h3>
+      <p>Ensure your operational identity is completely isolated from your personal one.</p>
+      <ul>
+        <li><strong>Operational Persona Name:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Alias used for investigations"></li>
+        <li><strong>Browser Profile Used:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Isolated Chrome/Firefox profile or container"></li>
+        <li><strong>Social Media / Platform Logins (Operational Only):</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="None unless explicitly part of scope"></textarea></li>
+      </ul>
+
+      <h3>OPSEC 2 — Infrastructure & Network Safety</h3>
+      <p>Document your isolation measures for network traffic, device hygiene, and investigative tooling.</p>
+      <ul>
+        <li><strong>Network Isolation (VPN / VPS / Proxy):</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Offshore VPN, VPS jump, Mullvad, Proton..."></li>
+        <li><strong>Device Used for Investigation:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="VM, disposable machine, Qubes VM, Linux container"></li>
+        <li><strong>Browser Isolation Tools:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="ScriptSafe, NoScript, uBlock Origin, multi-container browsing"></textarea></li>
+      </ul>
+
+      <h3>OPSEC 3 — Tracking, Logging & Contamination Prevention</h3>
+      <p>Prevent websites from correlating your visits, fingerprinting your setup, or detecting your investigation.</p>
+      <ul>
+        <li><strong>Fingerprint Reduction Measures:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Canvas randomization, spoofed user-agent, privacy resist fingerprinting"></textarea></li>
+        <li><strong>Referrer / Metadata Leakage Prevention:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Strict / disabled"></li>
+        <li><strong>Direct Interaction Avoidance Measures:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Do not like, comment, follow, or engage directly"></textarea></li>
+      </ul>
+
+      <h3>OPSEC 4 — High-Risk / Dark-Web Handling Protocols</h3>
+      <p>Document additional precautions for dark‑web related analysis.</p>
+      <ul>
+        <li><strong>Tor Access Method:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Tor Browser, Whonix, Tails, VM isolation"></li>
+        <li><strong>Downloaded Content Policy:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Never download files from unknown .onion sources"></textarea></li>
+        <li><strong>Screenshot / Evidence Procedure:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Safe screenshots only; strip EXIF; store securely"></textarea></li>
+      </ul>
+
+      <h3>OPSEC 5 — OPSEC Risk Rating</h3>
+      <ul>
+        <li><strong>Overall OPSEC Strength (High / Medium / Low):</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – fully isolated operational profile"></li>
+        <li><strong>Known Weak Points:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Browser fingerprinting, timezone leaks, reused IP..."></textarea></li>
+        <li><strong>Mitigation Plan:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Procedures to harden operational posture"></textarea></li>
+      </ul>
+
+      <div class="notes-box" data-section="sec-opsec">
+        <div class="notes-box-header">
+          <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – OPSEC</span></div>
+          <span class="notes-status"></span>
+        </div>
+        <textarea class="section-notes" placeholder="Document OPSEC constraints, VPN/VPS usage, and identity‑safety procedures."></textarea>
+        <div class="notes-hint">Review OPSEC posture before each high‑risk lookup.</div>
+      </div>
+
+    </div>
+  </details>
+</section>
+
+<section id="sec-0"
+      <!-- The OPSEC content will auto-fill from existing structure already in the document -->
+    </div>
+  </details>
+</section>
+
+<section id="sec-0" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">⚖️</div>
+            <div class="section-title-text">
+              <span class="section-title-main">0. Purpose, Scope & Engagement Rules</span>
+              <span class="section-title-sub">Define why you are investigating and what is in-bounds.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="callout warn">
+            <div>⚠️ <span class="callout-label">Legal & Ethical Baseline</span><br>
+              Only use publicly accessible OSINT. No hacking, intrusion, bypassing authentication, or harassment. Confirm your jurisdiction's privacy and data protection laws.
+            </div>
+          </div>
+
+          <h3>0.1 Purpose of This Methodology</h3>
+          <p>This methodology guides an investigator through a complete, repeatable OSINT workflow for background checks on individuals, using open sources only. It is suitable for due diligence, pre-employment vetting, executive checks, internal investigations, and threat/risk analysis.</p>
+
+          <h3>0.2 Engagement Rules</h3>
+          <ul>
+            <li><strong>No unauthorized access</strong>: No credential stuffing, bypassing logins, or exploiting vulnerabilities.</li>
+            <li><strong>No direct contact</strong> with the person of interest (POI) unless explicitly authorized as part of a social engineering engagement.</li>
+            <li><strong>Respect scope</strong>: Only collect what is relevant to the agreed purpose.</li>
+            <li><strong>Preserve evidence</strong>: Use screenshots, URLs, timestamps, and archives consistently.</li>
+          </ul>
+
+          <h3>0.3 Case Folder Setup</h3>
+          <p>For each investigation, create a dedicated case directory, with at minimum:</p>
+          <pre><code>/CaseName/
+  /Screenshots/
+  /Profiles/
+  /Metadata/
+  /HTML_Dumps/
+  /Timeline/
+  /Notes/
+</code></pre>
+
+          <div class="callout tip">
+            <div>💡 <span class="callout-label">Tip</span><br>
+              Use this HTML file as the <em>field manual</em> and your primary checklist. Keep raw evidence (screenshots, exports) in your filesystem under the case path.
+            </div>
+          </div>
+
+          <div class="notes-box" data-section="sec-0">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Scope & Rules</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Document scope, client, legal considerations, and constraints for this engagement..."></textarea>
+            <div class="notes-hint">Notes are saved locally in your browser (per device).</div>
+          </div>
+
+<h3>0.4 Case Intake Sheet</h3>
+          <ul>
+            <li><strong>Case Name:</strong><br><input style="width:100%;padding:6px;"></li>
+            <li><strong>Client / Requestor:</strong><br><input style="width:100%;padding:6px;"></li>
+            <li><strong>Purpose of Investigation:</strong><br><textarea style="width:100%;height:100px;padding:6px;"></textarea></li>
+            <li><strong>Initial Identifiers Provided:</strong><br><textarea style="width:100%;height:100px;padding:6px;"></textarea></li>
+            <li><strong>Legal / Ethical Constraints:</strong><br><textarea style="width:100%;height:100px;padding:6px;"></textarea></li>
+          </ul>
+
+
+        </div>
+      </details>
+
+    </section>
+
+    <!-- SECTION 1 -->
+    <section id="sec-1" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🎯</div>
+            <div class="section-title-text">
+              <span class="section-title-main">1. Target Identification & Initialization</span>
+              <span class="section-title-sub">Build the initial identity profile using structured fields.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>1.1 Core Identifiers (Fill As You Discover)</h3>
+<p>Collect all initial identifiers. These serve as pivots into later OSINT steps.</p>
+
+<ul>
+  <!-- PRIMARY IDENTIFIERS -->
+  <li><strong>Full Legal Name:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Johnathan Michael Doe"></li>
+  <li><strong>Known Aliases / Maiden Names:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Jane Smith, J. Smith, Jenny Doe"></li>
+  <li><strong>Nicknames:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Johnny, Jay, Mikey"></li>
+  <li><strong>Age or Birth Year:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Born 1991, ~32 years old"></li>
+  <li><strong>Gender:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Male/Female/Nonbinary"></li>
+  <li><strong>City / State / Country:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Austin, TX, USA"></li>
+  <li><strong>Photographs (filenames or URLs):</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="profile1.jpg, linkedin_pic.png, https://example.com/photo.jpg"></textarea></li>
+
+  <!-- DIGITAL IDENTIFIERS -->
+  <li><strong>Email Addresses:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="email1@example.com
+email2@example.com"></textarea></li>
+  <li><strong>Phone Numbers:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="+1-555-123-4567"></textarea></li>
+  <li><strong>Usernames / Handles:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., john_doe91, jdoe1991, theRealJD"></textarea></li>
+  <li><strong>Websites / Personal Domains:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., johndoe.com, portfolio.site"></li>
+  <li><strong>Linked Social Media Accounts:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Instagram, TikTok, LinkedIn URLs"></textarea></li>
+  <li><strong>Old Gamer Tags:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., NoScopeMike42"></li>
+  <li><strong>Discord or Telegram IDs:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., discordUser#1932, @telegramHandle"></li>
+
+  <!-- CONTEXT IDENTIFIERS -->
+  <li><strong>Claimed Employer(s):</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Company name(s)"></li>
+  <li><strong>Claimed Education History:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., B.S. CompSci, Harvard University"></li>
+  <li><strong>Claimed Certificates:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="AWS, CISSP, PMP"></textarea></li>
+  <li><strong>Claimed Projects:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Portfolio apps, GitHub repos"></textarea></li>
+  <li><strong>Claimed Volunteer Work:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Organizations, roles"></li>
+  <li><strong>Claimed Publications:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Articles, research, books"></textarea></li>
+
+  <!-- RELATIONSHIP IDENTIFIERS -->
+  <li><strong>Spouse / Partner:</strong><br><input style="width:100%;padding:6px;margin:4px 0;" placeholder="Name of partner"></li>
+  <li><strong>Known Associates:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Friends, associates, business partners"></textarea></li>
+  <li><strong>Mentioned Coworkers:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Coworkers named in posts or profiles"></textarea></li>
+  <li><strong>Close Friends:</strong><br><textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Names or usernames of close friends"></textarea></li>
+</ul>
+
+          <h3>1.2 Google Dorking Examples</h3>
+          <p>Use advanced Google operators to find résumés, profiles, PDFs, and obscure references.</p>
+          <pre><code>  "Johnathan Doe" "Austin" -facebook
+  "John Doe" "CV" filetype:pdf
+  "John Doe" "resume" filetype:doc
+  "John Doe" "GitHub" site:github.com
+  "john.doe@example.com"
+  "johndoe91" OR "john_doe91"
+  "John Doe" "works at"
+  "John Doe" "graduated" "University"
+</code></pre>
+
+          <div class="callout tip">
+            <div>💡 <span class="callout-label">Why This Matters</span><br>
+              These identifiers allow correlation across breaches, social media, metadata, employer records, property records, and behavioral patterns. Each item becomes an OSINT pivot in later sections.
+              <p><span class="callout-label">What These Identifiers Reveal</span><br>
+            <ul>
+            <li><strong>Name Variants</strong> → Help discover older accounts, aliases, and regional spellings.</li>
+            <li><strong>Emails</strong> → Connect to breaches, account creation dates, recoverable social profiles.</li>
+            <li><strong>Phone Numbers</strong> → Connect to WhatsApp/Signal/Telegram OSINT, region + carrier.</li>
+            <li><strong>Usernames</strong> → The most powerful cross-platform pivot; reused handles expose accounts.</li>
+            <li><strong>Photos</strong> → Used for reverse image search, background/location clues, identity correlation.</li>
+            <li><strong>Employment Claims</strong> → Used to verify résumés, LinkedIn claims, license verifications.</li>
+            <li><strong>Education Claims</strong> → Check alumni lists, degree matching, timelines.</li>
+          </ul>
+            </div>
+          </div>
+
+
+          <div class="notes-box" data-section="sec-1">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Target Profile</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record identifiers, variants, contradictions, and anything discovered from dorking that links to the POI."></textarea>
+            <div class="notes-hint">Use this to maintain your working identity profile.</div>
+          </div>
+        </div>
+
+      </details>
+    </section>
+
+    <!-- SECTION 2 -->
+        <!-- SECTION 2 -->
+    <section id="sec-2" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🧬</div>
+            <div class="section-title-text">
+              <span class="section-title-main">2. Personal &amp; Identity Verification</span>
+              <span class="section-title-sub">Structured worksheet for emails, usernames, and phone numbers.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>2.1 Email OSINT Worksheet</h3>
+          <p>Use this section to track each email address, where it appears, and what it reveals.</p>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Email Tools</span><br>
+              <a href="https://haveibeenpwned.com" target="_blank">HaveIBeenPwned</a> ·
+              <a href="https://emailrep.io" target="_blank">EmailRep.io</a> ·
+              <a href="https://hunter.io" target="_blank">Hunter.io</a> ·
+              <a href="https://github.com/megadose/holehe" target="_blank">Holehe</a> ·
+              <a href="https://github.com/mxrch/GHunt" target="_blank">GHunt</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Target Email Address:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., john.doe@example.com"></li>
+            <li><strong>Associated Names / Aliases:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Names this email is tied to in profiles, breaches, or signatures"></li>
+            <li><strong>Breach Hits (HaveIBeenPwned / others):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List breaches, approximate dates, exposed data types (passwords, addresses, etc.)"></textarea></li>
+            <li><strong>Service Associations (Google, Microsoft, etc.):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Gmail account, Microsoft account, Gravatar, etc."></textarea></li>
+            <li><strong>Notes on Risk / Behavior:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Password reuse risk, age of account, business vs personal usage."></textarea></li>
+          </ul>
+
+          <h3>2.2 Username Enumeration Worksheet</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Username OSINT</span><br>
+              <a href="https://whatsmyname.app" target="_blank">WhatsMyName</a> ·
+              <a href="https://github.com/soxoj/maigret" target="_blank">Maigret</a> ·
+              <a href="https://github.com/sherlock-project/sherlock" target="_blank">Sherlock</a> ·
+              <a href="https://namechk.com" target="_blank">Namechk</a>
+            </div>
+          </div>
+          <p>For each handle, record where it appears and how confident you are it belongs to the POI.</p>
+
+          <ul>
+            <li><strong>Username / Handle:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., john_doe91"></li>
+            <li><strong>Platforms Found On:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List URLs or platform names (Twitter, IG, Reddit, forums, etc.)"></textarea></li>
+            <li><strong>Evidence Linking to POI:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Same photos, same bio text, same city, overlapping friends, email reuse, etc."></textarea></li>
+            <li><strong>Confidence Rating (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., High – strong cross-platform clues"></li>
+          </ul>
+
+          <h3>2.3 Phone Number Verification Worksheet</h3>
+          <p>Determine the nature of each phone number and any linked online presence.</p>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Phone Tools</span><br>
+              <a href="https://numverify.com" target="_blank">NumVerify</a> ·
+              <a href="https://www.truecaller.com" target="_blank">TrueCaller</a> ·
+              <a href="https://www.opencnam.com" target="_blank">OpenCNAM</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Phone Number:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., +1-555-123-4567"></li>
+            <li><strong>Type &amp; Carrier:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Mobile / VOIP / Landline, carrier name if known"></li>
+            <li><strong>Region / Country:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Approximate region from lookup"></li>
+            <li><strong>Reputation / Spam Flags:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Spam reports, business usage, reputation indicators."></textarea></li>
+            <li><strong>Linked Messaging Apps:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="WhatsApp/Signal/Telegram profiles, OSINT from avatars and status messages."></textarea></li>
+          </ul>
+
+          <h3>2.4 Identity Confidence Summary</h3>
+          <p>Summarize how strongly email, username, and phone data support your assessment of the POI's identity.</p>
+          <ul>
+            <li><strong>Overall Identity Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., High – multiple corroborating signals across platforms"></li>
+            <li><strong>Key Supporting Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List the strongest links (same photo on LinkedIn &amp; WhatsApp, same handle and email on multiple platforms, etc.)"></textarea></li>
+            <li><strong>Gaps / Uncertainties:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Unverified emails, anonymous handles, conflicting phone region vs claimed location, etc."></textarea></li>
+          </ul>
+
+          <div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Personal and identity verification is the foundation of every OSINT investigation.
+    Before you can correlate accounts, assess risk, or build a behavioral profile,
+    you must confirm that the person you are investigating is who they claim to be.
+    Many individuals use aliases, shortened names, old handles, or intentionally
+    misleading details. Verifying identity early prevents chasing incorrect leads,
+    reduces false positives, and ensures that all subsequent findings accurately
+    map to the correct real-world individual.
+
+    <br><br>
+    <span class="callout-label">What Identity Verification Reveals</span>
+
+    <ul>
+      <li><strong>True Legal Identity</strong> → Helps distinguish between the POI and others with similar or identical names.</li>
+      <li><strong>Aliases & Name Variants</strong> → Identifies alternate spellings, maiden names, usernames, and common pseudonyms.</li>
+      <li><strong>Age & Life Stage</strong> → Supports timeline validation, education checks, employment claims, and eligibility for licenses or records.</li>
+      <li><strong>Location History</strong> → Confirms states, regions, or countries connected to the POI across different datasets.</li>
+      <li><strong>Contact Points</strong> → Validates emails, phone numbers, and other identifiers used on social platforms or accounts.</li>
+      <li><strong>Cross-Dataset Consistency</strong> → Ensures that social media, government records, and third-party databases align.</li>
+      <li><strong>Fraud or Impersonation Red Flags</strong> → Detects mismatched photos, conflicting details, or identity manipulation.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-2">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Identity Signals</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record email, username, and phone verification outcomes. Note which identities are confirmed, probable, or weak."></textarea>
+            <div class="notes-hint">You can use your own confidence labels (e.g., High, Medium, Low) in this space.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 3 -->
+        <!-- SECTION 3 -->
+    <section id="sec-3" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🌐</div>
+            <div class="section-title-text">
+              <span class="section-title-main">3. Social Media Discovery</span>
+              <span class="section-title-sub">Structured discovery of all online profiles.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>3.1 Platform Sweep Worksheet</h3>
+          <p>Record each discovered social media profile with URL, display name, image clues, and indicators it may belong to the POI.</p>
+
+          <ul>
+            <li><strong>Platform:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Facebook / Instagram / LinkedIn / TikTok / Reddit / X / etc."></li>
+
+            <li><strong>Profile URL:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="https://facebook.com/username"></li>
+
+            <li><strong>Display Name on Profile:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., John M. Doe"></li>
+
+            <li><strong>Profile Username / Handle:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="@johndoe91"></li>
+
+            <li><strong>Profile Photo Clues:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Same face as LinkedIn? Same background? Pets, car, room décor, tattoos, clothing clues."></textarea></li>
+
+            <li><strong>Bio / About Page Clues:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Workplace claims, city, hobby mentions, hashtags."></textarea></li>
+
+            <li><strong>Friends / Followers / Following Overlap:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Common associates across IG, Facebook, LinkedIn, etc."></textarea></li>
+
+            <li><strong>Confidence Level (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – matched profile photo + friends list"></li>
+          </ul>
+
+          <h3>3.2 Anonymous / Low-Friction Viewing</h3>
+          <p>Use these services to view profiles without logging into your own accounts:</p>
+          <ul>
+            <li><a href="https://imginn.com" target="_blank">ImgInn</a> – Instagram viewer</li>
+            <li><a href="https://www.picuki.com" target="_blank">Picuki</a> – Instagram viewer</li>
+            <li><a href="https://izuum.com" target="_blank">Izuum</a> – Instagram viewer</li>
+            <li><a href="https://vidnice.com" target="_blank">Vidnice</a> – TikTok viewer</li>
+            <li><a href="https://urlebird.com" target="_blank">UrleBird</a> – TikTok viewer</li>
+            <li><a href="https://www.reddit.com/user/USERNAME/about.json" target="_blank">Reddit JSON endpoints</a></li>
+          </ul>
+
+          <div class="callout tip">
+            <div>💡 <span class="callout-label">What Social Profiles Reveal</span><br>
+               <ul>
+            <li><strong>Location signals:</strong> tagged places, city names, timezone patterns.</li>
+            <li><strong>Employment indicators:</strong> workplace posts, uniforms, conferences, coworker tags.</li>
+            <li><strong>Behavioral fingerprint:</strong> writing style, emojis, hashtags, posting schedule.</li>
+            <li><strong>Relationship mapping:</strong> spouse, friends, family, coworkers.</li>
+            <li><strong>Historical data:</strong> old usernames, deleted photos still cached.</li>
+          </ul>
+            </div>
+          </div>
+
+          <div class="notes-box" data-section="sec-3">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Social Discovery</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="List discovered profiles and rough notes about platform, display name, profile picture, and initial impression."></textarea>
+            <div class="notes-hint">You can refine probabilities later in section 3A.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 3A -->
+        <!-- SECTION 3A -->
+    <section id="sec-3a" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🧩</div>
+            <div class="section-title-text">
+              <span class="section-title-main">3A. Deep Social Media Account Attribution</span>
+              <span class="section-title-sub">Correlate accounts using usernames, images, behaviors, metadata, and networks.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>3A.1 Username & Handle Correlation Worksheet</h3>
+          <p>Use this structured worksheet to evaluate how strongly each discovered username is tied to the POI.</p>
+
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Enumeration Tools</span><br>
+              <a href="https://whatsmyname.app" target="_blank">WhatsMyName</a> ·
+              <a href="https://github.com/soxoj/maigret" target="_blank">Maigret</a> ·
+              <a href="https://github.com/sherlock-project/sherlock" target="_blank">Sherlock</a> ·
+              <a href="https://namechk.com" target="_blank">Namechk</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Username / Handle:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., johndoe91 / doe_john / realJD"></li>
+
+            <li><strong>Platforms Discovered:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List platforms + URL for each: Instagram, TikTok, Reddit, Twitter/X, GitHub, forums..."></textarea></li>
+
+            <li><strong>Image Reuse Indicators:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Same face? Same pet? Same room décor? Same car/garage background? Same vacation photo?"></textarea></li>
+
+            <li><strong>Bio / Tagline Similarities:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Repeated phrases, emojis, interests, job titles, pronouns, hashtags..."></textarea></li>
+
+            <li><strong>Behavioral Fingerprint:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Writing tone, slang, political leanings, humor, emoji patterns, capitalization, posting cadence."></textarea></li>
+
+            <li><strong>Location / Timezone Signals:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Posting times, local events mentioned, tagged locations, climate cues."></textarea></li>
+
+            <li><strong>Social Network Overlap:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Friends/followers in common across IG/Facebook/TikTok/LinkedIn."></textarea></li>
+
+            <li><strong>Attribution Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – username reused + same profile photos"></li>
+          </ul>
+
+          <h3>3A.2 Instagram-Focused OSINT Worksheet</h3>
+          <p>Instagram requires special attention due to the volume of lifestyle data it reveals.</p>
+
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Instagram Viewers & Tools</span><br>
+              <a href="https://imginn.com" target="_blank">ImgInn</a> ·
+              <a href="https://www.picuki.com" target="_blank">Picuki</a> ·
+              <a href="https://izuum.com" target="_blank">Izuum</a> ·
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Instagram Username:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="@johndoe"></li>
+
+            <li><strong>Bio Analysis:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Employer, city, emojis, quotes, hashtags."></textarea></li>
+
+            <li><strong>Reels / Stories Observations:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Voice, locations, repeating background, rooms, cars, friends."></textarea></li>
+
+            <li><strong>Followers/Following Patterns:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Family names, work colleagues, local businesses, gyms, universities."></textarea></li>
+
+            <li><strong>Hashtag Analysis:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="#cityname, #workplace, #hobbies, #sports teams..."></textarea></li>
+          </ul>
+
+          <h3>3A.3 TikTok & YouTube Attribution Worksheet</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Video & Metadata Tools</span><br>
+              <a href="https://mattw.io/youtube-metadata/" target="_blank">MattW YouTube Metadata</a><br>
+              <a href="https://mattw.io/youtube-geofind/location" target="_blank">MW Geofind</a><br>
+              <a href="https://hadzy.com" target="_blank">Hadzy</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Video Account Username:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="TikTok or YouTube handle"></li>
+
+            <li><strong>Video Content Indicators:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Voice match, background match, city landmarks, hobbies, pets."></textarea></li>
+
+            <li><strong>Audio/Voice Cues:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Accent, tone, verbal quirks."></textarea></li>
+
+            <li><strong>Metadata Clues (using MattW):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Upload timestamps, geotags, device type."></textarea></li>
+          </ul>
+
+          <h3>3A.4 Combined Attribution Score</h3>
+          <p>Use this to determine if all discovered profiles likely belong to the same individual.</p>
+
+          <ul>
+            <li><strong>High-Confidence Links:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Strong overlaps across image, bio, network, or behavior."></textarea></li>
+
+            <li><strong>Medium-Confidence Links:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Some similarities, but missing direct correlation."></textarea></li>
+
+            <li><strong>Low-Confidence / Outliers:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Accounts that may be unrelated or spoofed."></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Deep attribution is the process of determining whether multiple online accounts
+    across different platforms actually belong to the same real-world individual.
+    Many people reuse usernames, photos, writing styles, locations, and social
+    networks across platforms. When analyzed together, these signals create a
+    powerful identity fingerprint that can confirm ownership with high confidence
+    — even when names or profiles differ. This phase is essential for avoiding
+    false positives, strengthening correlations, and validating the authenticity
+    of discovered accounts.
+
+    <br><br>
+    <span class="callout-label">What Deep Attribution Reveals</span>
+
+    <ul>
+      <li><strong>Username Patterns</strong> → Reused handles, stylistic quirks, or numeric patterns that link accounts.</li>
+      <li><strong>Image Reuse</strong> → Profile photos, pets, rooms, cars, or backgrounds appearing across platforms.</li>
+      <li><strong>Writing Style / Linguistic Fingerprints</strong> → Consistent grammar, emojis, slang, tone, and posting cadence.</li>
+      <li><strong>Location Signals</strong> → Timezone patterns, geotags, local events, background details, or climate cues.</li>
+      <li><strong>Social Network Overlap</strong> → Following/follower patterns, repeated friends, coworkers, or family.</li>
+      <li><strong>Behavioral Consistency</strong> → Hobbies, interests, posting habits, or recurring life themes.</li>
+      <li><strong>Cross-Platform Corroboration</strong> → Multiple small indicators combining to form a high-confidence match.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-3a">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Account Attribution</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="List each suspected account, your evidence, correlation strength, and confidence rating."></textarea>
+            <div class="notes-hint">E.g., IG @handle – high confidence; TikTok @handle2 – medium; Reddit u/user – low.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+
+    <section id="sec-4" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">📷</div>
+            <div class="section-title-text">
+              <span class="section-title-main">4. Image & Video OSINT</span>
+              <span class="section-title-sub">Reverse search, metadata, manipulation checks, scene analysis.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>4.1 Image Intake Worksheet</h3>
+          <p>Use this for every photo linked to the POI: profile images, selfies, group photos, thumbnails, or images posted by friends/family.</p>
+
+          <ul>
+            <li><strong>Image Filename or URL:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="profile_pic01.jpg or https://..."></li>
+
+            <li><strong>Where It Was Found:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Instagram, LinkedIn, Facebook, TikTok frame, website, forum"></li>
+
+            <li><strong>Initial Observations:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Clothing, background, environment, other people, visible text, props."></textarea></li>
+          </ul>
+
+          <h3>4.2 Reverse Image Search Results</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Reverse Search Tools</span><br>
+              <a href="https://lens.google.com" target="_blank">Google Lens</a> ·
+              <a href="https://yandex.com/images" target="_blank">Yandex Images</a> ·
+              <a href="https://www.bing.com/visualsearch" target="_blank">Bing Visual Search</a> ·
+              <a href="https://tineye.com" target="_blank">TinEye</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Matches Found (URLs):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Links where the same or similar picture appears."></textarea></li>
+
+            <li><strong>Oldest Known Appearance:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Date or site first seen (from TinEye or cached pages)"></li>
+
+            <li><strong>Is the Image Reused by Impersonators?</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Yes/No – list fake profiles if any"></li>
+          </ul>
+
+          <h3>4.3 Metadata Extraction Worksheet</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Metadata Tools</span><br>
+              <a href="https://exifdata.com" target="_blank">ExifData.com</a> ·
+              <a href="https://www.get-metadata.com" target="_blank">Get-Metadata</a> ·
+              <a href="https://www.metadata2go.com" target="_blank">Metadata2Go</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Camera / Device Model:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="If EXIF is available"></li>
+
+            <li><strong>Timestamp (EXIF):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="When the photo was taken"></li>
+
+            <li><strong>GPS Data (if present):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Lat/Long or None"></li>
+
+            <li><strong>Software / Editing Indicators:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Apps used to edit image (Photoshop, Snapseed, VSCO, etc.)"></textarea></li>
+          </ul>
+
+          <h3>4.4 Manipulation / Deepfake Check</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Forgery / Manipulation Tools</span><br>
+              <a href="https://www.diffchecker.com/image-diff/" target="_blank">Diffchecker (Image Diff)</a> ·
+              <a href="https://www.copyleaks.com/ai-content-detector" target="_blank">AI/Deepfake detectors</a> ·
+              <a href="https://www.plaghunter.com" target="_blank">Plaghunter</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Signs of Editing:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Lighting inconsistencies, duplicated objects, warped backgrounds, odd hand/finger shapes."></textarea></li>
+
+            <li><strong>AI/Deepfake Indicators:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Unnatural eyes/teeth, mismatched earrings, inconsistent jewelry, melty details."></textarea></li>
+          </ul>
+
+          <h3>4.5 Scene / Geolocation Analysis</h3>
+
+          <ul>
+            <li><strong>Visible Landmarks / Clues:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Storefronts, mountains, coastlines, license plates, signs."></textarea></li>
+
+            <li><strong>Weather & Climate Indicators:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Snow, humidity, sunlight angle"></li>
+
+            <li><strong>Language / Text in Image:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Signs, posters, menus, shirts..."></li>
+
+            <li><strong>Possible Location(s):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Cities or regions based on clues"></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Images and videos often reveal more than any written profile. People reuse
+    photos across platforms, capture their homes, cars, workplaces, friends, and
+    routines, and rarely think about the metadata or background details. Careful
+    image and video analysis can confirm identity, expose hidden relationships,
+    and quietly map locations, timelines, and assets without any direct contact
+    with the POI. This makes visual OSINT one of the highest-value stages in a
+    background investigation.
+
+    <br><br>
+    <span class="callout-label">What Image &amp; Video Analysis Reveals</span>
+
+    <ul>
+      <li><strong>Identity Confirmation</strong> → Face, tattoos, scars, clothing, and recurring environments that tie accounts to the same person.</li>
+      <li><strong>Location &amp; Geolocation Clues</strong> → Landmarks, signage, landscapes, license plates, weather, and timezone hints.</li>
+      <li><strong>Lifestyle &amp; Risk Indicators</strong> → Substance use, weapons, gangs, high-risk hobbies, or reputational red flags visible in media.</li>
+      <li><strong>Social Graph</strong> → Friends, family, coworkers, and recurring companions appearing in group photos or tagged media.</li>
+      <li><strong>Assets &amp; Financial Signals</strong> → Homes, vehicles, luxury goods, business premises, and other property indicators.</li>
+      <li><strong>Timeline Reconstruction</strong> → Event dates, travel history, life milestones, and job/relationship changes over time.</li>
+      <li><strong>Manipulation or Deepfake Risk</strong> → Signs of edited, AI-generated, or misused imagery that can affect credibility assessments.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-4">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Imagery</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record key images, reverse search hits, metadata, suspected locations, and any manipulation indicators."></textarea>
+            <div class="notes-hint">Link your notes to screenshot filenames where possible.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+        <section id="sec-5" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">📱</div>
+            <div class="section-title-text">
+              <span class="section-title-main">5. Phone OSINT</span>
+              <span class="section-title-sub">Carrier/type, reputation, app linkage, timeline analysis.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>5.1 Phone Number Intake</h3>
+          <p>Use this worksheet for each number belonging to (or associated with) the POI.</p>
+
+          <ul>
+            <li><strong>Phone Number:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="+1-555-123-4567"></li>
+
+            <li><strong>How It Was Discovered:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Found on IG bio, LinkedIn contact, breach data, business card, etc."></li>
+
+            <li><strong>Associated Names / Accounts:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Accounts or names tied to this number in OSINT lookups."></textarea></li>
+          </ul>
+
+          <h3>5.2 Lookup &amp; Verification Tools</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Phone Intelligence Tools</span><br>
+              <a href="https://numverify.com" target="_blank">NumVerify</a> ·
+              <a href="https://www.truecaller.com" target="_blank">TrueCaller</a> ·
+              <a href="https://www.opencnam.com" target="_blank">OpenCNAM</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Carrier / Line Type (VOIP, Mobile, Landline):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="T-Mobile / VOIP / Google Voice / etc."></li>
+
+            <li><strong>Region / Country of Origin:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="City/State/Country from lookup."></li>
+
+            <li><strong>Reputation / Spam Reports:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Any spam flags from TrueCaller, user reports, business tags, etc."></textarea></li>
+          </ul>
+
+          <h3>5.3 Messaging App OSINT</h3>
+          <p>Many apps allow limited lookup without contacting the user. Only view, never message.</p>
+
+          <ul>
+            <li><strong>WhatsApp Profile Photo:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Describe observed photo (device-dependent)."></li>
+
+            <li><strong>WhatsApp About/Status Text:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Quotes, emojis, links, job references."></li>
+
+            <li><strong>Signal Profile Photo/Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="If visible, describe."></li>
+
+            <li><strong>Telegram Username / Profile:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Visible name, handle, profile picture clues."></li>
+          </ul>
+
+          <h3>5.4 Phone Number Timeline</h3>
+          <p>Understanding how long a number has been in use helps determine legitimacy.</p>
+
+          <ul>
+            <li><strong>Earliest Known Use:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="First seen in breaches, social posts, archives."></li>
+
+            <li><strong>Latest Confirmed Use:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Most recent appearance online."></li>
+
+            <li><strong>Number Stability Assessment:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Long-term personal number vs disposable/VOIP rotating use."></textarea></li>
+          </ul>
+
+          <h3>5.5 Correlation Summary</h3>
+          <ul>
+            <li><strong>Does This Number Match Claimed Location?</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Yes/No + explanation."></li>
+
+            <li><strong>Does This Number Connect to Known Social Accounts?</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List accounts discovered via phone linkage."></textarea></li>
+
+            <li><strong>Overall Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – consistent metadata and app profiles match POI."></li>
+          </ul>
+
+          <div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Phone numbers are one of the strongest and most reliable identifiers in modern
+    OSINT investigations. Unlike usernames and emails, phone numbers are rarely
+    changed, often reused for years, and tightly connected to messaging apps,
+    authentication systems, breaches, and social accounts. A single number can
+    unlock a chain of pivot points that reveal a person’s platforms, identities,
+    locations, and communication habits. Proper intake ensures accuracy before
+    running lookups, preventing contamination and misattribution.
+
+    <br><br>
+    <span class="callout-label">What Phone Numbers Reveal</span>
+
+    <ul>
+      <li><strong>Carrier & Line Type</strong> → Identifies whether the number is mobile, VoIP, landline, or hosted by a disposable provider.</li>
+      <li><strong>Country & Region</strong> → Confirms geographic origin, timezones, and potential residency patterns.</li>
+      <li><strong>Messaging App Accounts</strong> → Connects to WhatsApp, Telegram, Signal, Viber, Line, and others.</li>
+      <li><strong>Breached Data</strong> → Links the number to leaked credentials, usernames, and associated emails.</li>
+      <li><strong>Reverse Search Matches</strong> → Surfaces online profiles, marketplace accounts, spam reports, and OSINT trails.</li>
+      <li><strong>Historical Usage</strong> → Shows whether the number has been used by multiple owners or tied to past identities.</li>
+      <li><strong>Risk Indicators</strong> → Detects burner numbers, VoIP anonymization, or mismatches between claimed and real locations.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-5">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Phone</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Document phone lookups, VOIP vs mobile indicators, and any social app associations."></textarea>
+            <div class="notes-hint">Avoid contacting the POI directly from your own number.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-6" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🧨</div>
+            <div class="section-title-text">
+              <span class="section-title-main">6. Breach & Credential Exposure</span>
+              <span class="section-title-sub">Analyze exposed emails, passwords, datasets, and dark‑web traces.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>6.1 Email / Username Breach Intake</h3>
+          <p>Use this worksheet for each email or username discovered earlier. This helps assess exposure risk and verify identity linkage.</p>
+
+          <ul>
+            <li><strong>Email or Username:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="email@example.com or johndoe91"></li>
+
+            <li><strong>Where It Was Found:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Profile, resume, breach, OSINT scan, etc."></li>
+
+            <li><strong>Platforms Associated With It:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Instagram, TikTok, Reddit, LinkedIn, etc."></textarea></li>
+          </ul>
+
+          <h3>6.2 Breach Lookups</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Breach Intelligence Tools</span><br>
+              <a href="https://haveibeenpwned.com" target="_blank">HaveIBeenPwned</a> ·
+              <a href="https://breachdirectory.org" target="_blank">BreachDirectory</a> ·
+              <a href="https://leakcheck.io" target="_blank">LeakCheck</a> ·
+              <a href="https://snusbase.com" target="_blank">Snusbase</a> ·
+              <a href="https://hashmob.net" target="_blank">HashMob</a> ·
+              <a href="https://pastebin.com" target="_blank">Pastebin</a> ·
+              <a href="https://ransomlook.io" target="_blank">RansomLook</a> ·
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Breach Hits (List all datasets):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., LinkedIn 2012, Dropbox 2016, Twitter breach..."></textarea></li>
+
+            <li><strong>Earliest Breach Date Found:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Approximate year or exact date if known"></li>
+
+            <li><strong>Latest Breach / Leak Appearance:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Most recent compromise or mention"></li>
+          </ul>
+
+          <h3>6.3 Exposure Type Breakdown</h3>
+          <p>Record what categories of data were exposed. This is critical for risk scoring.</p>
+
+          <ul>
+            <li><strong>Password Exposure:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Plaintext / Hashed / Salted / Unknown"></li>
+
+            <li><strong>Personal Info Exposed:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Addresses, phone numbers, DOB, gender, IP logs, recovery emails..."></textarea></li>
+
+            <li><strong>Financial / Sensitive Data:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Credit card data, SSN, bank credentials, medical info..."></textarea></li>
+          </ul>
+
+          <h3>6.4 Dark‑Web & Underground Mentions</h3>
+          <p>Track appearances in dumps, ransomware listings, paste sites, and marketplaces.</p>
+
+          <ul>
+            <li><strong>Pastebin Mentions / Dumps:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Pastebin URLs or snippets."></textarea></li>
+
+            <li><strong>Ransomware Group Mentions (RansomLook):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="If listed as a victim, employee, or domain match."></textarea></li>
+
+            <li><strong>Dark‑Web Market Mentions (generic searches):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Provide notes on usernames/emails appearing in marketplaces."></textarea></li>
+          </ul>
+
+          <h3>6.5 Password Reuse Risk</h3>
+          <p>Determine whether exposed credentials help confirm account ownership, behavior patterns, or compromise risk.</p>
+
+          <ul>
+            <li><strong>Repeated Passwords Across Breaches:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Note any reused password patterns."></textarea></li>
+
+            <li><strong>Password Strength Indicators:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Weak / Moderate / Strong based on patterns"></li>
+
+            <li><strong>Behavioral Insights:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="E.g., uses pet names, birthdays, sports teams, common numbers."></textarea></li>
+          </ul>
+
+          <h3>6.6 Exposure Risk Score</h3>
+
+          <ul>
+            <li><strong>Risk Rating (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – multiple password leaks including plaintext"></li>
+
+            <li><strong>Key Supporting Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Explain why the risk rating is what it is."></textarea></li>
+
+            <li><strong>Mitigation Notes:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Recommendations for password rotation, MFA, fraud alerts."></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Breach and credential exposure analysis is one of the most powerful components
+    of modern OSINT. Whenever an email, username, or phone number appears in a
+    breach, it provides a timestamped snapshot of a person’s digital life — showing
+    which services they used, when accounts were created, and what other identifiers
+    were tied to them at the time. These exposures create reliable cross-platform
+    correlations and can reveal security risks, identity overlaps, and behavioral
+    patterns that are invisible elsewhere. Understanding breach history also helps
+    validate ownership of accounts and map how a person’s digital footprint evolved.
+
+    <br><br>
+    <span class="callout-label">What Breach Data Reveals</span>
+
+    <ul>
+      <li><strong>Associated Emails & Usernames</strong> → Shows alternate identities used across different platforms and time periods.</li>
+      <li><strong>Password Reuse Patterns</strong> → Identifies habit-based or predictable reuse that exposes security vulnerabilities.</li>
+      <li><strong>Account Creation Timelines</strong> → Helps reconstruct when and where the POI established online accounts.</li>
+      <li><strong>Service Usage History</strong> → Reveals which websites, apps, and platforms the POI interacted with.</li>
+      <li><strong>Location & Technical Metadata</strong> → Occasionally includes IPs, device details, or geographic hints tied to earlier activity.</li>
+      <li><strong>Risk Indicators</strong> → Detects compromised or actively circulating credentials used in fraud or account takeovers.</li>
+      <li><strong>Cross-Platform Identity Linking</strong> → Exposed datasets often connect multiple independent identifiers into a single profile.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-6">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Breach Exposure</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Summarize breach patterns, recurring credentials, high‑risk datasets, and dark‑web mentions."></textarea>
+            <div class="notes-hint">This section is especially important for threat/risk scoring.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-7" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">💼</div>
+            <div class="section-title-text">
+              <span class="section-title-main">7. Employment, Education & Licenses</span>
+              <span class="section-title-sub">Verify professional history, academic claims, and credentials.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>7.1 Employment Verification</h3>
+          <p>Use this table to validate each job the POI claims. Cross-reference with LinkedIn, resumes, bios, news mentions, and employer directories.</p>
+
+          <ul>
+            <li><strong>Employer Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Company name as claimed"></li>
+
+            <li><strong>Claimed Job Title:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Senior Developer"></li>
+
+            <li><strong>Claimed Employment Dates:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., Jan 2019 – Mar 2022"></li>
+
+            <li><strong>Verification Source(s):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="LinkedIn, Glassdoor, company website, employee directory, news, archived pages..."></textarea></li>
+
+            <li><strong>Verification Result:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Confirmed / Unconfirmed / Contradictory"></li>
+
+            <li><strong>Discrepancy Notes:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Incorrect dates, inflated title, nonexistent company division, etc."></textarea></li>
+          </ul>
+
+          <h3>7.2 Education Verification</h3>
+          <p>Document all academic institutions, degree claims, and confirmation results.</p>
+
+          <ul>
+            <li><strong>School / Institution Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="University name"></li>
+
+            <li><strong>Claimed Degree & Major:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="B.S. Computer Science, MBA, etc."></li>
+
+            <li><strong>Years Attended (claimed):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="2015–2019"></li>
+
+            <li><strong>Verification Source(s):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Alumni directories, commencement lists, LinkedIn, archived pages, yearbooks"></textarea></li>
+
+            <li><strong>Verification Result:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Confirmed / No record / Conflicting info"></li>
+
+            <li><strong>Notes on Discrepancies or Missing Data:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Programs not offered, incorrect dates, fake diploma mills, etc."></textarea></li>
+          </ul>
+
+          <h3>7.3 Certifications & Professional Licenses</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">License/Certification Lookup Tools</span><br>
+              <a href="https://adviserinfo.sec.gov" target="_blank">SEC AdviserInfo</a> ·
+              <a href="https://brokercheck.finra.org" target="_blank">FINRA BrokerCheck</a> ·
+              <a href="https://amsrvs.registry.faa.gov/airmeninquiry/" target="_blank">FAA Airmen Registry</a> ·
+              <a href="https://www.verify.tn.gov" target="_blank">State License Lookups</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Certification / License Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="CISSP, PMP, Real Estate License, Pilot Certificate..."></li>
+
+            <li><strong>Issuing Organization or Authority:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="ISC2, PMI, state board, FAA..."></li>
+
+            <li><strong>License/Certificate ID (if available):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Certificate number or lookup reference"></li>
+
+            <li><strong>Verification Status:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Valid / Expired / Not found"></li>
+
+            <li><strong>Discrepancy Notes:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Claimed but not found, incorrect dates, revoked, etc."></textarea></li>
+          </ul>
+
+          <h3>7.4 Career Timeline Reconstruction</h3>
+          <p>Timeline analysis helps spot gaps, overlaps, or fabricated roles.</p>
+
+          <ul>
+            <li><strong>Chronological Job/Education Timeline:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Lay out jobs and degrees in order. Look for gaps, overlaps, regressions."></textarea></li>
+
+            <li><strong>Identified Gaps or Overlaps:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Explain questionable periods."></textarea></li>
+
+            <li><strong>Career Progression Assessment:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Does the progression make sense? Sudden senior title? Missing entry-level roles?"></textarea></li>
+          </ul>
+
+          <h3>7.5 Final Verification Confidence</h3>
+          <ul>
+            <li><strong>Overall Employment Confidence:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High / Medium / Low"></li>
+
+            <li><strong>Overall Education Confidence:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High / Medium / Low"></li>
+
+            <li><strong>Overall License/Certification Confidence:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High / Medium / Low"></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Verifying employment history, education claims, and professional licenses is
+    critical for establishing the credibility and background of the person of interest.
+    These elements form the backbone of someone’s public identity — shaping how they
+    present themselves online, how they qualify for certain jobs, and how others
+    perceive their expertise and legitimacy. False claims, timeline gaps, or
+    inconsistencies can signal deception, résumé inflation, fraud, or deliberate
+    identity manipulation. Proper verification ensures that all downstream OSINT
+    analytics are grounded in factual, real-world history.
+
+    <br><br>
+    <span class="callout-label">What Employment & Education Reveal</span>
+
+    <ul>
+      <li><strong>Career Timeline</strong> → Establishes where the POI worked, in what roles, and how their responsibilities evolved.</li>
+      <li><strong>Skill & Competency Claims</strong> → Matches declared experience and abilities with actual training and certifications.</li>
+      <li><strong>Identity Stability</strong> → Long-term employment or degree histories help confirm the authenticity of other datasets.</li>
+      <li><strong>Geographic Patterns</strong> → Jobs and schools provide region-based clues that align with addresses, phone numbers, and photos.</li>
+      <li><strong>Professional Network</strong> → Reveals coworkers, supervisors, and associated industries that connect to social accounts.</li>
+      <li><strong>Lice
+
+      </strong>
+    </li>
+  </ul>
+
+
+          <div class="notes-box" data-section="sec-7">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Work & Education</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Document confirmed and disputed job titles, employers, degrees, certifications, and any discrepancies."></textarea>
+            <div class="notes-hint">Discrepancies here are often high-impact for due diligence.</div>
+          </div>
+
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-8" class="section-card">
+  <details class="section-toggle">
+    <summary class="section-summary">
+      <div class="section-summary-left">
+        <div class="section-icon">🗺️</div>
+        <div class="section-title-text">
+          <span class="section-title-main">8. Location, Mapping &amp; Property OSINT</span>
+          <span class="section-title-sub">Address history, property data, geolocation clues, environment analysis.</span>
+        </div>
+      </div>
+      <div class="section-chevron">▼</div>
+    </summary>
+
+    <div class="section-inner">
+
+      <h3>8.1 Address Intake Worksheet</h3>
+      <p>Record any location linked to the POI: home, work, rentals, PO boxes, relatives’ homes, or recurring geolocation clues.</p>
+
+      <ul>
+        <li><strong>Address or Location:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="123 Main St, Austin, TX"></textarea>
+        </li>
+
+        <li><strong>Source of Address:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Facebook profile, LinkedIn job, property record, image EXIF..."></textarea>
+        </li>
+
+        <li><strong>Associated People:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Family, roommates, spouse, business partners..."></textarea>
+        </li>
+
+        <li><strong>Address Type:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Home / Work / Rental / PO box"></textarea>
+        </li>
+      </ul>
+
+      <h3>8.2 Property Lookup Tools</h3>
+      <div class="callout tool">
+        <div>
+          🧰 <span class="callout-label">Property &amp; Map Tools</span><br>
+          <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> ·
+          <a href="https://otc.armchairresearch.org/map" target="_blank">OpenTrafficCamMap</a> ·
+          <a href="https://map.snapchat.com" target="_blank">Snap Map</a> ·
+          <a href="https://www.netronline.com" target="_blank">Netronline (Public Records)</a>
+        </div>
+      </div>
+
+      <h3>8.3 Property Details Worksheet</h3>
+      <p>Use this to record any property ownership or rental ties discovered.</p>
+
+      <ul>
+        <li><strong>Property Owner (per records):</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Owner name per county records"></textarea>
+        </li>
+
+        <li><strong>Parcel / Property ID:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="If available from county lookup"></textarea>
+        </li>
+
+        <li><strong>Property Type:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Residential / Commercial / Rental / Land"></textarea>
+        </li>
+
+        <li><strong>Purchase / Transfer Date:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="From property history"></textarea>
+        </li>
+
+        <li><strong>Notes on Ownership / Residency:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Owner matches POI? Relative? Employer-owned residence?"></textarea>
+        </li>
+      </ul>
+
+      <h3>8.4 Geolocation Clue Analysis</h3>
+      <p>Use clues from images, videos, posts, or metadata to approximate the POI’s movements.</p>
+
+      <ul>
+        <li><strong>Landmarks / Visible Structures:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Bridges, buildings, mountains, storefronts..."></textarea>
+        </li>
+
+        <li><strong>Environmental Indicators:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Weather, vegetation, street layout, architecture style..."></textarea>
+        </li>
+
+        <li><strong>Language / Signs / Local Text:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Languages or local terms seen"></textarea>
+        </li>
+
+        <li><strong>Estimated Location(s):</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Possible cities/regions based on clues"></textarea>
+        </li>
+      </ul>
+
+      <h3>8.5 Address &amp; Residence Timeline</h3>
+      <p>Organize all known addresses in chronological order.</p>
+
+      <ul>
+        <li><strong>Address History Timeline:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Lay out addresses: dates, moves, patterns."></textarea>
+        </li>
+
+        <li><strong>Residence Stability Assessment:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Frequent moves? Long-term residence? Rental changes?"></textarea>
+        </li>
+      </ul>
+
+      <h3>8.6 Final Location Confidence Rating</h3>
+
+      <ul>
+        <li><strong>Overall Location Confidence (High / Medium / Low):</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="High – multiple address confirmations"></textarea>
+        </li>
+
+        <li><strong>Key Supporting Evidence:</strong><br>
+          <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Why this rating is justified"></textarea>
+        </li>
+      </ul>
+
+      <div class="callout tip">
+        <div>
+          💡 <span class="callout-label">Why This Matters</span><br>
+          Location intelligence is one of the strongest forms of real-world verification
+          in OSINT. A person’s environment—where they live, work, travel, and spend time—
+          creates patterns that cannot be faked long-term. Mapping OSINT connects digital
+          behavior to physical reality by identifying addresses, neighborhoods, property
+          ownership, commute paths, frequented locations, and lifestyle indicators. Proper
+          geolocation strengthens identity attribution, exposes hidden connections, and
+          provides essential context for behavioral and financial assessments.
+
+          <br><br>
+          <span class="callout-label">What Location Intelligence Reveals</span>
+
+          <ul>
+            <li><strong>Residential History</strong> → Confirms past and current addresses, helping validate timelines and personal claims.</li>
+            <li><strong>Property Ownership</strong> → Identifies homes, land, vehicles, and other assets tied to the POI or their relatives.</li>
+            <li><strong>Socioeconomic Indicators</strong> → Neighborhood type, property value, and housing history reveal lifestyle stability and risk factors.</li>
+            <li><strong>Daily Movement Patterns</strong> → Geotagged posts, backgrounds, and recurring locations show routines and activity zones.</li>
+            <li><strong>Workplace Corroboration</strong> → Confirms employment claims through office buildings, commute paths, or regional proximity.</li>
+            <li><strong>Hidden Relationships</strong> → Shared addresses, co-located vehicles, or property records expose personal or financial ties.</li>
+            <li><strong>Fraud &amp; Identity Mismatch Flags</strong> → Conflicting address histories or impossible travel timelines indicate deception.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="notes-box" data-section="sec-8">
+        <div class="notes-box-header">
+          <div class="notes-label-left">
+            <span class="icon">📝</span><span>Investigator Notes – Location</span>
+          </div>
+          <span class="notes-status"></span>
+        </div>
+        <textarea class="section-notes" placeholder="Record confirmed or suspected addresses, property ownership, geolocation evidence."></textarea>
+        <div class="notes-hint">Tie notes to screenshots and property records.</div>
+      </div>
+
+    </div>
+  </details>
+</section>
+
+
+    <section id="sec-9" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🏢</div>
+            <div class="section-title-text">
+              <span class="section-title-main">9. Business & Legal OSINT</span>
+              <span class="section-title-sub">Corporate ties, court actions, financial/legal risk indicators.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>9.1 Corporate Association Intake</h3>
+          <p>Document all businesses the POI is connected to—ownership, employment, filings, registrations, or indirect ties.</p>
+
+          <ul>
+            <li><strong>Business Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Company or DBA name"></li>
+
+            <li><strong>Connection to POI:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Owner / Officer / Employee / Affiliated / Mentioned / Associated"></li>
+
+            <li><strong>Source of Association:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="LinkedIn, OpenCorporates, website, SEC EDGAR, news article"></li>
+
+            <li><strong>Website / Online Presence:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Business URL(s)"></li>
+          </ul>
+
+          <h3>9.2 Corporate Lookup Tools</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Business Intelligence Tools</span><br>
+              <a href="https://opencorporates.com" target="_blank">OpenCorporates</a> ·
+              <a href="https://find-and-update.company-information.service.gov.uk" target="_blank">UK Companies House</a> ·
+              <a href="https://www.sec.gov/edgar" target="_blank">SEC EDGAR</a> ·
+              <a href="https://pacer.uscourts.gov" target="_blank">PACER</a> ·
+              <a href="https://www.courtlistener.com" target="_blank">CourtListener</a>
+            </div>
+          </div>
+
+          <h3>9.3 Corporate Ownership & Officer Verification</h3>
+          <ul>
+            <li><strong>Registered Owner(s) / Officer(s):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Names listed in filings"></textarea></li>
+
+            <li><strong>POI Appears in Filings?</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Yes/No – list forms where found"></li>
+
+            <li><strong>Business Registration Dates:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Incorporation date, dissolution date if any"></li>
+
+            <li><strong>Business Status:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Active / Inactive / Dissolved"></li>
+          </ul>
+
+          <h3>9.4 Court, Legal & Regulatory Actions</h3>
+          <p>Track all known court actions, lawsuits, bankruptcy filings, liens, regulatory penalties, or criminal cases involving the POI or their businesses.</p>
+
+          <ul>
+            <li><strong>Court Case Type:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Civil / Criminal / Bankruptcy / Lien / Regulatory"></li>
+
+            <li><strong>Case Number or Title (if known):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="CourtListener / PACER reference"></li>
+
+            <li><strong>Jurisdiction / Court:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="County, state, federal, or international court"></li>
+
+            <li><strong>Parties Involved:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="POI role: Plaintiff / Defendant / Witness / Affiliated"></textarea></li>
+
+            <li><strong>Outcome or Current Status:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Active / Dismissed / Settled / Unknown"></li>
+
+            <li><strong>Case Summary / Allegations:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Key accusations, violations, results..."></textarea></li>
+          </ul>
+
+          <h3>9.5 Business Risk Indicators</h3>
+          <p>Capture organizational or legal red flags that may indicate risk or misconduct.</p>
+
+          <ul>
+            <li><strong>Financial Red Flags:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Bankruptcy, unpaid taxes, liens, rapid dissolutions, inconsistent filings"></textarea></li>
+
+            <li><strong>Operational Red Flags:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Fake reviews, nonexistent offices, employees contradict claims..."></textarea></li>
+
+            <li><strong>Legal / Regulatory Red Flags:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="SEC violations, licensing issues, sanctions, lawsuits"></textarea></li>
+          </ul>
+
+          <h3>9.6 Business & Legal Confidence Rating</h3>
+          <ul>
+            <li><strong>Overall Corporate Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – filings and roles confirmed with multiple sources"></li>
+
+            <li><strong>Legal Risk Rating (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Medium – some civil cases but no criminal actions"></li>
+
+            <li><strong>Supporting Evidence Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List evidence supporting the ratings"></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Business and legal intelligence provides the backbone of corporate due diligence,
+    revealing how a company or individual truly operates beyond their public image.
+    Corporate registrations, litigation records, regulatory filings, and business
+    affiliations expose a POI’s real-world footprint — including hidden entities,
+    shell companies, financial distress, fraud indicators, and undisclosed activities.
+    Legal OSINT highlights patterns of lawsuits, compliance failures, tax issues,
+    sanctions risk, and contractual disputes. Together, business and legal records form
+    a factual, independently verifiable foundation that supports deeper attribution,
+    risk scoring, and decision-making.
+
+    <br><br>
+    <span class="callout-label">What Business & Legal OSINT Reveals</span>
+
+    <ul>
+      <li><strong>Corporate Registrations</strong> → Confirms legitimate business entities, DBAs, formation dates, and ownership.</li>
+      <li><strong>Beneficial Ownership</strong> → Identifies true controllers, including nominees, relatives, or shell-structure layering.</li>
+      <li><strong>Litigation History</strong> → Shows past civil, criminal, or administrative actions relevant to trust, safety, or compliance.</li>
+      <li><strong>Regulatory or Licensing Issues</strong> → Exposes sanctions, revoked licenses, complaints, and disciplinary actions.</li>
+      <li><strong>Financial Stability Signals</strong> → Bankruptcy filings, liens, and judgments reveal solvency, reliability, and risk.</li>
+      <li><strong>Contract & Vendor Disputes</strong> → Indicates operational failures, fraud cases, or misrepresentation claims.</li>
+      <li><strong>Undisclosed Affiliations</strong> → Finds related companies, shared addresses, or overlapping officers used to hide activity.</li>
+      <li><strong>Fraud & Compliance Red Flags</strong> → Catch faked businesses, dissolved entities still in use, or expired registrations.</li>
+    </ul>
+  </div>
+</div>
+
+
+
+          <div class="notes-box" data-section="sec-9">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Business & Legal</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Capture companies linked to the POI, lawsuits, bankruptcies, or regulatory actions."></textarea>
+            <div class="notes-hint">Mark each item as confirmed, alleged, or inconclusive.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-10" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🚨</div>
+            <div class="section-title-text">
+              <span class="section-title-main">10. Threat, Risk & Dark-Web Surface OSINT</span>
+              <span class="section-title-sub">Exposure analysis, online threats, dark-web signals, behavioral red flags.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>10.1 Threat Behavior Intake</h3>
+          <p>Document any behavior suggesting risk: harassment, scams, stalking, extremism, fraud, impersonation, or volatile activity.</p>
+          <ul>
+            <li><strong>Observed Concerning Behavior:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="E.g., aggressive posts, credible threats, extremist content..."></textarea></li>
+
+            <li><strong>Platform Where Observed:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Twitter, Reddit, Discord, Telegram"></li>
+
+            <li><strong>Target(s) of Behavior (if any):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Public figures, coworkers, random users..."></li>
+          </ul>
+
+          <h3>10.2 Dark-Web & Leak Surface Tools</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Dark-Web & Leak Indexers</span><br>
+              <a href="https://ahmia.fi" target="_blank">Ahmia</a> ·
+              <a href="https://ransomlook.io" target="_blank">RansomLook</a>
+            </div>
+          </div>
+
+          <h3>10.3 Dark-Web / Underground Mentions Worksheet</h3>
+          <p>Record mentions of the POI found in dark-web indexes or breach aggregation sites.</p>
+          <ul>
+            <li><strong>Search Query Used:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Name, username, email, phone..."></li>
+
+            <li><strong>Platform / Index Where Found:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Ahmia, DarkSearch, Exposed.lol..."></li>
+
+            <li><strong>Type of Mention:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Credential leak, dox post, sale listing, discussion..."></li>
+
+            <li><strong>Content Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Summarize what was found without downloading anything illegal."></textarea></li>
+          </ul>
+
+          <h3>10.4 Ransomware / Extortion Exposure</h3>
+          <p>Track whether the POI's employer or businesses appear on extortion portals or ransomware leak sites.</p>
+          <ul>
+            <li><strong>Organization Impacted:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Employer or associated business"></li>
+
+            <li><strong>Leak Site:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="RansomLook, group leak site name"></li>
+
+            <li><strong>Exposure Details:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Publicly posted data, threats, proof packages, etc."></textarea></li>
+          </ul>
+
+          <h3>10.5 Threat Indicators & Behavioral Red Flags</h3>
+          <ul>
+            <li><strong>Extremist Symbolism or Content:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Group affiliations, slogans, hashtags..."></textarea></li>
+
+            <li><strong>Harassment / Stalking Patterns:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Frequency, platforms, escalation patterns"></textarea></li>
+
+            <li><strong>Fraud / Scam Indicators:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Multiple aliases, fake businesses, frequent complaints..."></textarea></li>
+
+            <li><strong>Digital Hygiene Weaknesses:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Repeated password reuse, exposed credentials, poor OPSEC"></textarea></li>
+          </ul>
+
+          <h3>10.6 Overall Threat & Risk Rating</h3>
+          <ul>
+            <li><strong>Risk Rating (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – evidence of targeted harassment, extremist activity"></li>
+
+            <li><strong>Primary Risk Factors:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Key indicators contributing to the rating"></textarea></li>
+
+            <li><strong>Mitigating Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Context, contradictions, or benign explanations"></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Threat and dark-web intelligence exposes the hidden risks that surround a person,
+    company, or online identity. These signals often appear long before public incidents,
+    formal breaches, or visible compromises. Monitoring exposure across breach datasets,
+    credential marketplaces, darknet forums, malware dumps, scam ecosystems, and threat
+    actor chatter provides early warning indicators that traditional searches will miss.
+    Understanding these covert signals helps assess real-world harm potential, ongoing
+    targeting, criminal interest, impersonation activity, or vulnerabilities actively
+    being exploited.
+
+    <br><br>
+    <span class="callout-label">What Threat & Dark-Web OSINT Reveals</span>
+
+    <ul>
+      <li><strong>Credential Exposure</strong> → Compromised emails, passwords, tokens, or API keys seen in dumps or stealer logs.</li>
+
+      <li><strong>Identity Abuse & Impersonation</strong> → Fake accounts, cloned profiles, fraudulent job listings, or social-engineering setups.</li>
+
+      <li><strong>Active Targeting</strong> → Indicators that the POI or organization is being discussed, profiled, or targeted by threat actors.</li>
+
+      <li><strong>Data Leakage</strong> → Sensitive internal documents, code, or customer data that may be circulating in illicit markets.</li>
+
+      <li><strong>Malware & Stealer Artifacts</strong> → Log files, hostnames, browser fingerprints, or device IDs connected to compromised machines.</li>
+
+      <li><strong>Financial or Fraud Risk</strong> → Reports, complaints, or scam activity connected to the POI through fraud networks or forums.</li>
+
+      <li><strong>Reputational Damage Signals</strong> → Mentions in breach corpuses, dark-web discussions, or underground marketplaces indicating risk elevation.</li>
+
+      <li><strong>Operational Security Gaps</strong> → Weak passwords, reused credentials, exposed secrets, and digital hygiene issues that threat actors exploit.</li>
+
+      <li><strong>Early-Stage Attack Indicators</strong> → Domain typosquats, phishing kits, credential-stuffing chatter, or exploit attempts tied to the POI.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-10">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Threat Profile</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Summarize any indicators of extremism, targeted harassment, serious fraud, or dark-web exposure involving the POI."></textarea>
+            <div class="notes-hint">Differentiate between credible signals and anonymous accusations.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-11" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">💬</div>
+            <div class="section-title-text">
+              <span class="section-title-main">11. Reputation & Sentiment OSINT</span>
+              <span class="section-title-sub">Media signals, complaints, praise, sentiment scoring, context analysis.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>11.1 Reputation Intake Overview</h3>
+          <p>Document how the POI is perceived across media, community platforms, complaints forums, and social conversations.</p>
+
+          <ul>
+            <li><strong>General Public Perception:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Initial impression from search results, social posts, comments..."></textarea></li>
+
+            <li><strong>Commonly Mentioned Traits:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Professional / controversial / unknown / respected / disliked"></li>
+          </ul>
+
+          <h3>11.2 News & Media Coverage</h3>
+          <div class="callout tool">
+            <div>🧰 <span class="callout-label">Media Search Tools</span><br>
+              <a href="https://news.google.com" target="_blank">Google News</a> ·
+              <a href="https://www.bing.com/news" target="_blank">Bing News</a> ·
+              <a href="https://www.complaintsboard.com" target="_blank">ComplaintsBoard</a> ·
+              <a href="https://www.ripoffreport.com" target="_blank">RipoffReport</a>
+            </div>
+          </div>
+
+          <ul>
+            <li><strong>Media Article Title:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Headline of an article involving the POI"></li>
+
+            <li><strong>Source / Publisher:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="News site, blog, industry journal"></li>
+
+            <li><strong>Published Date:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="YYYY-MM-DD"></li>
+
+            <li><strong>Summary of Coverage:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="What the article says about the POI"></textarea></li>
+
+            <li><strong>Tone of Coverage (Positive / Neutral / Negative):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Negative – involved in local dispute"></li>
+          </ul>
+
+          <h3>11.3 Complaints & Public Feedback</h3>
+          <p>Document complaints, accusations, customer reviews, or forum discussions.</p>
+
+          <ul>
+            <li><strong>Complaint or Claim:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Description of alleged action"></textarea></li>
+
+            <li><strong>Platform:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="ComplaintsBoard, RipoffReport, Reddit..."></li>
+
+            <li><strong>Severity (Low / Medium / High):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Medium – multiple unresolved complaints"></li>
+
+            <li><strong>Credibility Assessment:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Evidence-supported vs anonymous accusations"></textarea></li>
+          </ul>
+
+          <h3>11.4 Positive Signals</h3>
+          <p>Capture praise, awards, recognition, endorsements, or positive testimonials.</p>
+
+          <ul>
+            <li><strong>Positive Mention:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Example: Known for volunteer work"></textarea></li>
+
+            <li><strong>Source / Context:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="LinkedIn post, local news, award announcement..."></li>
+          </ul>
+
+          <h3>11.5 Reputation Sentiment Score</h3>
+          <ul>
+            <li><strong>Overall Sentiment (Positive / Neutral / Negative):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Neutral – mixed reviews with some complaints"></li>
+
+            <li><strong>Key Drivers of Sentiment:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Patterns observed across multiple platforms"></textarea></li>
+
+            <li><strong>Mitigating or Contradicting Information:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Alternative explanations, disputed claims, positive counterexamples"></textarea></li>
+          </ul>
+
+          <h3>11.6 Final Reputation Assessment</h3>
+          <ul>
+            <li><strong>Reputation Rating (High / Medium / Low Risk):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Low risk – Mostly positive public perception"></li>
+
+            <li><strong>Supporting Evidence Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Brief justification for your final rating"></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Reputation and sentiment analysis provides a real-world measure of how a person,
+    company, or organization is perceived across the internet. Public reviews, social-media
+    conversations, consumer complaints, news coverage, forums, and search-engine trends
+    reveal insights that cannot be detected through technical OSINT alone. These signals
+    help identify trustworthiness, behavioral patterns, credibility, emerging disputes,
+    and potential PR or legal liabilities. Sentiment OSINT forms an essential component
+    of risk assessment because it captures external viewpoints — not just self-reported
+    claims or internal data.
+
+    <br><br>
+    <span class="callout-label">What Reputation & Sentiment Reveal</span>
+
+    <ul>
+      <li><strong>Public Trust Indicators</strong> → Customer reviews, testimonials, and repeated complaints reveal reputation stability or decline.</li>
+
+      <li><strong>Consumer Protection Issues</strong> → Complaints to agencies, scam reports, fraud accusations, and unresolved disputes.</li>
+
+      <li><strong>Media Coverage Signals</strong> → Positive or negative news stories, controversies, lawsuits, or corporate announcements.</li>
+
+      <li><strong>Social-Media Narratives</strong> → How communities discuss the POI across Reddit, Twitter/X, forums, blogs, and niche groups.</li>
+
+      <li><strong>Stakeholder Perception</strong> → How employees, customers, partners, or investors describe experiences with the POI.</li>
+
+      <li><strong>Reputational Red Flags</strong> → Sudden spikes in negative sentiment, trending accusations, viral posts, or pattern-matched claims.</li>
+
+      <li><strong>Brand Integrity & Authenticity</strong> → Identifies impersonation issues, misinformation, or AstroTurfing (fake review campaigns).</li>
+
+      <li><strong>Context for Risk Scoring</strong> → Patterns of dissatisfaction often align with operational problems, fraud risks, or ethical concerns.</li>
+
+      <li><strong>Long-Term Behavioral Patterns</strong> → How sentiment changes over years, indicating stability, reform, escalation, or recurring issues.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-11">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Reputation</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record notable praise, criticism, complaints, or patterns of community sentiment."></textarea>
+            <div class="notes-hint">Context matters: one complaint is not the same as a pattern.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-12" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🔎</div>
+            <div class="section-title-text">
+              <span class="section-title-main">12. Advanced Search & Technical OSINT</span>
+              <span class="section-title-sub">Deep dorking, metadata exploitation, specialized queries, pivot mapping.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>12.1 Advanced Google Dorking Worksheet</h3>
+          <p>Use structured operators to pull hidden, obscure, or semi-public information sources.</p>
+
+          <ul>
+            <li><strong>Primary Query Used:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="\"John Doe\" + \"Austin\" -facebook"></li>
+
+            <li><strong>Operator(s) Included:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="filetype:, inurl:, intitle:, site:, cache:"></li>
+
+            <li><strong>Sources Returned:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="PDF resumes, cached profiles, public lists..."></textarea></li>
+
+            <li><strong>Value of Query (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – found multiple resume PDFs"></li>
+          </ul>
+
+          <h3>12.2 Specialized Query Blocks</h3>
+          <p>Use or record targeted dorks that apply to specific categories.</p>
+
+          <h4>Employment / Résumé Search</h4>
+          <pre><code>"John Doe" "resume" filetype:pdf
+"John Doe" "CV" filetype:doc
+site:linkedin.com/in "John Doe"</code></pre>
+
+          <h4>Education Verification</h4>
+          <pre><code>"John Doe" "graduated" "University"
+"John Doe" "alumni"</code></pre>
+
+          <h4>Social Media / Username</h4>
+          <pre><code>"johndoe91" site:instagram.com
+"johndoe" "Twitter"</code></pre>
+
+          <h4>Legal / Court Activity</h4>
+          <pre><code>"John Doe" "lawsuit"
+"John Doe" "arrested"
+"John Doe" "court case"</code></pre>
+
+          <h4>Email / Phone Exposure</h4>
+          <pre><code>"john.doe@example.com"
+"+1 555 123 4567"</code></pre>
+
+          <h4>Image / Photo Clues</h4>
+          <pre><code>"John Doe" "wedding" "photo"
+filetype:jpg "John Doe"</code></pre>
+
+          <h3>12.3 Technical Artifact & Metadata Analysis</h3>
+          <p>Documents and media often contain metadata that reveals authors, software, timestamps, even usernames.</p>
+
+          <ul>
+            <li><strong>Document Source (URL or Filename):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Resume_2023.pdf"></li>
+
+            <li><strong>Metadata Extracted:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Author, creator tool, modified dates..."></textarea></li>
+
+            <li><strong>Embedded Username:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="e.g., johndoe1991"></li>
+
+            <li><strong>Metadata Relevance:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – matches known handle"></li>
+          </ul>
+
+          <h3>12.4 Advanced Pivot Mapping</h3>
+          <p>Document the pivots generated from advanced search findings.</p>
+
+          <ul>
+            <li><strong>New Identifier Discovered:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Username, phone, address, alias"></li>
+
+            <li><strong>Source of Pivot:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="PDF metadata, cached page, article"></li>
+
+            <li><strong>How It Connects to POI:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Matches email pattern, reused handle, same city..."></textarea></li>
+
+            <li><strong>Pivot Value (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – confirms identity across social platforms"></li>
+          </ul>
+
+          <h3>12.5 Query Effectiveness & Analysis</h3>
+          <ul>
+            <li><strong>Most Effective Queries:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List the dorks that returned the best results."></textarea></li>
+
+            <li><strong>Dead Ends / Ineffective Queries:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Track what did NOT work to avoid repetition."></textarea></li>
+
+            <li><strong>Analysis Notes:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Patterns, recurring data points, contradictions..."></textarea></li>
+          </ul>
+
+          <h3>12.6 Advanced Search Confidence Rating</h3>
+          <ul>
+            <li><strong>Overall OSINT Search Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – multiple strong pivots discovered"></li>
+
+            <li><strong>Supporting Evidence Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Why this confidence rating is justified"></textarea></li>
+          </ul>
+
+          <div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Advanced search and technical OSINT techniques uncover information that cannot be
+    retrieved through normal browsing, simple queries, or consumer-level tools.  
+    These methods allow investigators to reach deeper layers of the internet —
+    archived data, cached pages, file repositories, machine-readable metadata,
+    codebases, technical documentation, and infrastructure artifacts.  
+    Mastery of advanced operators, filters, scanning techniques, and structured data
+    queries enables analysts to surface hidden patterns, forgotten assets, abandoned
+    domains, vulnerable endpoints, and misconfigured resources.  
+    Technical OSINT elevates an investigation from surface-level insights to a
+    multi-dimensional understanding of a person, business, or system.
+
+    <br><br>
+    <span class="callout-label">What Advanced Search & Technical OSINT Reveal</span>
+
+    <ul>
+      <li><strong>Archived & Deleted Data</strong> → Cached pages, old profiles, removed documents, and legacy corporate structures.</li>
+
+      <li><strong>Deep Web Indexes</strong> → Government databases, file directories, datasets, court repositories, and structured info sources.</li>
+
+      <li><strong>File Discovery & Metadata</strong> → Exposed PDFs, images, spreadsheets, and code archives containing EXIF, author, or location data.</li>
+
+      <li><strong>Infrastructure Clues</strong> → Subdomains, DNS records, hosting fingerprints, old servers, SSL history, and forgotten assets.</li>
+
+      <li><strong>API & Endpoint Intelligence</strong> → Misconfigured APIs, public endpoints, open directories, or unintentionally exposed data streams.</li>
+
+      <li><strong>Source Code Signals</strong> → GitHub commits, developer handles, dependencies, environment leaks, and credential exposure.</li>
+
+      <li><strong>Operator-Level Search Precision</strong> → Google dorks, filetype searches, negative filters, site-specific crawling, and pattern matching.</li>
+
+      <li><strong>Automation & Scripting Insights</strong> → Log patterns, script metadata, and technical artifacts that reveal habits or operational behavior.</li>
+
+      <li><strong>Cross-Platform Correlation</strong> → Linking technical identifiers (emails, usernames, keys, repos) back to the POI with high confidence.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-12">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Advanced Search</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record any unusual or high-value findings from advanced queries, including syntax that worked well."></textarea>
+            <div class="notes-hint">You can paste working search strings here for reuse.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="sec-13" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🧠</div>
+            <div class="section-title-text">
+              <span class="section-title-main">13. Link Analysis, Timelines & Reporting</span>
+              <span class="section-title-sub">Relationship mapping, timeline reconstruction, evidence synthesis, final reporting.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+
+          <h3>13.1 Link Analysis Worksheet</h3>
+          <p>Map connections between the POI, their identities, associates, businesses, locations, and digital assets.</p>
+
+          <ul>
+            <li><strong>Entity Name:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Person, business, username, phone, address..."></li>
+
+            <li><strong>Entity Type:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Person / Business / Alias / Email / Handle / Address"></li>
+
+            <li><strong>Relationship to POI:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Coworker, spouse, business partner, alternate identity..."></textarea></li>
+
+            <li><strong>Evidence Supporting Link:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Screenshots, metadata, social connections, filings"></textarea></li>
+
+            <li><strong>Strength of Link (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – multiple confirming sources"></li>
+          </ul>
+
+          <h3>13.2 Multi-Entity Network Mapping</h3>
+          <p>Document clusters of related entities.</p>
+
+          <ul>
+            <li><strong>Cluster Name / Category:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Family, work group, aliases, business holdings..."></li>
+
+            <li><strong>Entities in Cluster:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List all related identities and assets"></textarea></li>
+
+            <li><strong>Cluster Risk Level:</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="Medium – business ties with past lawsuits"></li>
+          </ul>
+
+          <h3>13.3 Timeline Reconstruction Worksheet</h3>
+          <p>Build a chronological narrative of addresses, jobs, relationships, accounts, breaches, and notable events.</p>
+
+          <ul>
+            <li><strong>Life/Event Timeline:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Chronological events: job changes, moves, major posts..."></textarea></li>
+
+            <li><strong>Digital Timeline (Accounts, aliases, activity):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Account creation dates, username reuse, behavior timelines"></textarea></li>
+
+            <li><strong>Breach/Exposure Timeline:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="When emails/handles appeared in breaches"></textarea></li>
+
+            <li><strong>Location Timeline:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Address changes, travel patterns, geolocation clues"></textarea></li>
+          </ul>
+
+          <h3>13.4 Evidence Quality Assessment</h3>
+          <p>Rate the reliability of collected intelligence.</p>
+
+          <ul>
+            <li><strong>High-Confidence Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Government filings, verified accounts, metadata-backed images"></textarea></li>
+
+            <li><strong>Medium-Confidence Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Social posts, weak metadata, indirect mentions"></textarea></li>
+
+            <li><strong>Low-Confidence Evidence:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Anonymous accusations, unverified comments"></textarea></li>
+          </ul>
+
+          <h3>13.5 Drafting the Final Report</h3>
+          <p>Use this section to prepare your final deliverable.</p>
+
+          <ul>
+            <li><strong>Executive Summary Draft:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="High-level overview of findings"></textarea></li>
+
+            <li><strong>Key Findings:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Top 5–10 major findings"></textarea></li>
+
+            <li><strong>Risk Assessment Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Overall reputation, threat, and risk rating"></textarea></li>
+
+            <li><strong>Recommended Actions (If applicable):</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="Mitigations, next steps, monitoring suggestions"></textarea></li>
+          </ul>
+
+          <h3>13.6 Final Case Confidence Rating</h3>
+          <ul>
+            <li><strong>Overall Case Confidence (High / Medium / Low):</strong><br>
+              <input style="width:100%;padding:6px;margin:4px 0;" placeholder="High – independent corroboration across multiple sources"></li>
+
+            <li><strong>Supporting Evidence Summary:</strong><br>
+              <textarea style="width:100%;padding:6px;margin:4px 0;" placeholder="List the most reliable links, timelines, and evidence clusters"></textarea></li>
+          </ul>
+
+<div class="callout tip">
+  <div>
+    💡 <span class="callout-label">Why This Matters</span><br>
+    Link analysis and timeline reconstruction transform raw OSINT findings into a clear,
+    evidence-based narrative. While individual data points may seem isolated, connecting
+    them reveals hidden relationships, behavioral patterns, coincidences that are not
+    actually coincidental, and chronological inconsistencies. Link analysis visually
+    exposes networks, associates, infrastructure ties, company affiliations, asset
+    ownership, and digital footprints that would otherwise remain invisible.  
+    Timelines provide temporal structure, showing how events unfolded and whether claims
+    align with real-world data.  
+    Reporting converts these connections into actionable intelligence — the final,
+    decision-ready product of any OSINT investigation.
+
+    <br><br>
+    <span class="callout-label">What Link Analysis & Timelines Reveal</span>
+
+    <ul>
+      <li><strong>Hidden Relationships</strong> → Associates, family links, shared addresses, overlapping accounts, and organizational ties.</li>
+
+      <li><strong>Operational Patterns</strong> → Routines, movement cycles, posting habits, financial activity, and behavioral consistency.</li>
+
+      <li><strong>Identity Validation</strong> → Consistent timelines confirm authenticity; contradictions highlight deception or identity obfuscation.</li>
+
+      <li><strong>Infrastructure Connections</strong> → Domains, emails, usernames, phone numbers, and businesses that link back to the POI.</li>
+
+      <li><strong>Network Mapping</strong> → Visualization exposes clusters, hierarchies, influence patterns, and cross-platform footprints.</li>
+
+      <li><strong>Event Corroboration</strong> → Matching posts, metadata, and records against claimed dates verifies or disproves narratives.</li>
+
+      <li><strong>Red Flags & Anomalies</strong> → Gaps, overlaps, impossible travel timelines, or sudden unexplained changes in behavior.</li>
+
+      <li><strong>Fraud & Risk Indicators</strong> → Connections to high-risk individuals, dissolved companies, scams, or suspicious assets.</li>
+
+      <li><strong>Clear, Executive-Level Intelligence</strong> → Reporting distills raw data into structured findings, visualizations, and recommendations.</li>
+    </ul>
+  </div>
+</div>
+
+
+          <div class="notes-box" data-section="sec-13">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Final Narrative</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Draft your executive summary, key risks, and conclusions here."></textarea>
+            <div class="notes-hint">Use clear, defensible language – avoid speculation without evidence.</div>
+          </div>
+
+        </div>
+      </details>
+    </section>
+
+    
+<section id="sec-app-a" class="section-card">
+  <details class="section-toggle">
+    <summary class="section-summary">
+      <div class="section-summary-left">
+        <div class="section-icon">📚</div>
+        <div class="section-title-text">
+          <span class="section-title-main">Appendix A – OSINT Tool Index (Enhanced Interactive Grid)</span>
+          <span class="section-title-sub">Categorized, clickable tool launcher with descriptions.</span>
+        </div>
+      </div>
+      <div class="section-chevron">▼</div>
+    </summary>
+    <div class="section-inner">
+
+      <h3>How to Use This Appendix</h3>
+      <p>This appendix provides a categorized, searchable index of tools aligned to each major section of the methodology. Each tool includes:</p>
+      <ul>
+        <li><strong>Tool Name</strong></li>
+        <li><strong>Direct Link</strong></li>
+        <li><strong>Category / Purpose</strong></li>
+        <li><strong>Suggested Use Case</strong></li>
+      </ul>
+
+      <h3>🔎 Search Tools</h3>
+      <p>Use Ctrl+F (or browser search) to quickly jump to any tool by name or category label (e.g., “Location”, “Breach”, “Dark-Web”).</p>
+
+      <hr style="border-color:#1f2937;margin:14px 0;">
+
+      <!-- 1. Personal & Identity Verification -->
+      <h3>1. Personal &amp; Identity Verification Tools</h3>
+      <ul>
+        <li><a href="https://pipl.com" target="_blank">Pipl</a> — Deep identity correlation across global public records and online traces.</li>
+        <li><a href="https://epieos.com" target="_blank">Epieos</a> — Reverse email lookup revealing linked accounts, avatars, and services.</li>
+        <li><a href="https://thatsthem.com" target="_blank">That’sThem</a> — People search and basic linkage for phones, emails, and addresses.</li>
+        <li><a href="https://numverify.com" target="_blank">NumVerify</a> — Phone validation and carrier/line type lookup for identity checks.</li>
+        <li><a href="https://emailrep.io" target="_blank">EmailRep.io</a> — Email reputation scoring and threat context (spam, abuse, breaches).</li>
+      </ul>
+
+      <!-- 2. Deep Social Attribution & Social Media OSINT -->
+      <h3>2. Deep Social Attribution &amp; Social Media Tools</h3>
+      <ul>
+        <li><a href="https://whatsmyname.app" target="_blank">WhatsMyName</a> — Username enumeration across hundreds of platforms for cross-identity correlation.</li>
+        <li><a href="https://github.com/qeeqbox/social-analyzer" target="_blank">Social Analyzer</a> — Automated social profile discovery and analysis by username.</li>
+        <li><a href="https://github.com/p1ngul1n0/blackbird" target="_blank">Blackbird</a> — OSINT tool focused on discovering social-media accounts.</li>
+        <li><a href="https://github.com/twintproject/twint" target="_blank">Twint</a> — Advanced Twitter/X OSINT without API keys (timelines, bios, followers).</li>
+        <li><a href="https://redditsearch.io" target="_blank">RedditSearch</a> — Historical Reddit post lookup and user content discovery.</li>
+        <li><a href="https://mattw.io/youtube-metadata" target="_blank">YouTube Metadata Viewer</a> — Extracts metadata and statistics from YouTube channels and videos.</li>
+      </ul>
+
+      <!-- 3. Contact, Phone & Email Intake -->
+      <h3>3. Contact, Phone &amp; Email Intelligence Tools</h3>
+      <ul>
+        <li><a href="https://numlookup.com" target="_blank">NumLookup</a> — Free reverse phone lookup with carrier and line-type hints.</li>
+        <li><a href="https://freecarrierlookup.com" target="_blank">FreeCarrierLookup</a> — Carrier lookup for mobile, landline, VoIP classification.</li>
+        <li><a href="https://sync.me" target="_blank">Sync.me</a> — Crowdsourced phone reputation and caller ID intelligence.</li>
+        <li><a href="https://github.com/megadose/holehe" target="_blank">Holehe</a> — Check which major websites a given email address is registered on.</li>
+        <li><a href="https://hunter.io" target="_blank">Hunter.io</a> — Email discovery and verification for domains and organizations.</li>
+      </ul>
+
+      <!-- 4. Image, Video & Media OSINT -->
+      <h3>4. Image, Video &amp; Media OSINT Tools</h3>
+      <ul>
+        <li><a href="https://images.google.com" target="_blank">Google Images / Lens</a> — Reverse image search and visual similarity matching.</li>
+        <li><a href="https://www.bing.com/visualsearch" target="_blank">Bing Visual Search</a> — Reverse image search and object recognition.</li>
+        <li><a href="https://yandex.com/images" target="_blank">Yandex Images</a> — Powerful reverse image search, particularly for faces and locations.</li>
+        <li><a href="https://www.invid-project.eu/tools-and-services/" target="_blank">InVid Verification Toolbox</a> — Keyframe extraction, reverse search, and video verification toolkit.</li>
+        <li><a href="https://citizenevidence.org" target="_blank">YouTube DataViewer (Amnesty)</a> — Extract video upload date and perform reverse-image search on frames.</li>
+        <li><a href="https://exiftool.org" target="_blank">ExifTool</a> — Command-line utility for extracting EXIF and metadata from images and videos.</li>
+      </ul>
+
+      <!-- 5. Breach, Credential & Exposure Intelligence -->
+      <h3>5. Breach, Credential &amp; Exposure Intelligence</h3>
+      <ul>
+        <li><a href="https://haveibeenpwned.com" target="_blank">Have I Been Pwned</a> — Check if emails or passwords appear in known breach corpuses.</li>
+        <li><a href="https://dehashed.com" target="_blank">DeHashed</a> — Paid breach search engine for emails, usernames, IPs, and passwords.</li>
+        <li><a href="https://scylla.sh" target="_blank">Scylla.sh</a> — Open-source breach and credential exposure intelligence platform.</li>
+        <li><a href="https://hunt.io" target="_blank">Hunt.io</a> — Stealer log and leaked credential intelligence for compromised identities.</li>
+      </ul>
+
+      <!-- 6. Business, Corporate & Legal OSINT -->
+      <h3>6. Business, Corporate &amp; Legal OSINT Tools</h3>
+      <ul>
+        <li><a href="https://opencorporates.com" target="_blank">OpenCorporates</a> — Global business registry search across millions of companies.</li>
+        <li><a href="https://www.sec.gov/edgar/searchedgar/companysearch" target="_blank">SEC EDGAR</a> — US public company filings, ownership, and disclosures.</li>
+        <li><a href="https://find-and-update.company-information.service.gov.uk" target="_blank">UK Companies House</a> — UK company registration, officers, and filings.</li>
+        <li><a href="https://pacer.uscourts.gov" target="_blank">PACER</a> — Paid access to US federal court records and dockets.</li>
+        <li><a href="https://courtlistener.com" target="_blank">CourtListener</a> — Free access to many US court opinions and some docket information.</li>
+        <li><a href="https://dockets.justia.com" target="_blank">Justia Dockets</a> — Legal case dockets and summaries, mainly US-focused.</li>
+        <li><a href="https://www.dnb.com" target="_blank">Dun &amp; Bradstreet</a> — Business credit and risk information (paid).</li>
+        <li><a href="https://www.creditsafe.com" target="_blank">CreditSafe</a> — Company risk scoring, credit, and failure predictions (paid).</li>
+      </ul>
+
+      <!-- 7. Employment, Education & Licenses -->
+      <h3>7. Employment, Education &amp; License Verification Tools</h3>
+      <ul>
+        <li><a href="https://linkedin.com" target="_blank">LinkedIn</a> — Employment history, mutual connections, and role verification.</li>
+        <li><a href="https://glassdoor.com" target="_blank">Glassdoor</a> — Employee reviews, salary ranges, and basic employer data.</li>
+        <li><a href="https://degreeverify.org" target="_blank">DegreeVerify (NSC)</a> — US academic degree verification (paid).</li>
+        <li><a href="https://www.chea.org" target="_blank">CHEA Accreditation Directory</a> — Verify if institutions are properly accredited.</li>
+        <li><a href="https://brokercheck.finra.org" target="_blank">FINRA BrokerCheck</a> — US broker and brokerage license and disciplinary checks.</li>
+        <li><a href="https://adviserinfo.sec.gov" target="_blank">SEC AdviserInfo</a> — Registered investment adviser and firm information.</li>
+        <li><a href="https://amsrvs.registry.faa.gov/airmeninquiry/" target="_blank">FAA Airmen Registry</a> — Pilot license verification in the US.</li>
+      </ul>
+
+      <!-- 8. Location, Mapping & Property OSINT -->
+      <h3>8. Location, Mapping &amp; Property OSINT Tools</h3>
+      <ul>
+        <li><a href="https://www.google.com/earth" target="_blank">Google Earth Pro</a> — High-resolution satellite imagery and historical views.</li>
+        <li><a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> — Community-driven mapping with granular location data.</li>
+        <li><a href="https://map.snapchat.com" target="_blank">Snap Map</a> — Public Snaps and stories plotted geographically in near real time.</li>
+        <li><a href="https://www.netronline.com" target="_blank">Netronline</a> — Portal to US county property, tax, and deed records.</li>
+        <li><a href="https://www.zillow.com" target="_blank">Zillow</a> — US property estimates, sales history, and home details.</li>
+        <li><a href="https://www.realtor.com" target="_blank">Realtor.com</a> — Property listings with location, price history, and property data.</li>
+        <li><a href="https://www.whitepages.com" target="_blank">Whitepages</a> — Address history and reverse lookup for people and phone numbers.</li>
+      </ul>
+
+      <!-- 9. Sanctions, Business Risk & Legal Flags -->
+      <h3>9. Sanctions, Business Risk &amp; Legal Flag Tools</h3>
+      <ul>
+        <li><a href="https://sanctionssearch.ofac.treas.gov" target="_blank">OFAC Sanctions List Search</a> — US sanctions list lookups.</li>
+        <li><a href="https://www.sanctionsmap.eu" target="_blank">EU Sanctions Map</a> — EU consolidated sanctions search and context.</li>
+      </ul>
+
+      <!-- 10. Threat, Risk & Dark-Web Surface OSINT -->
+      <h3>10. Threat, Risk &amp; Dark-Web Surface OSINT Tools</h3>
+      <ul>
+        <li><a href="https://ahmia.fi" target="_blank">Ahmia</a> — Search engine for Tor hidden services (index of .onion sites).</li>
+        <li><a href="https://darksearch.io" target="_blank">DarkSearch.io</a> — Dark web search interface for indexed Tor content.</li>
+        <li><a href="https://otx.alienvault.com" target="_blank">AlienVault OTX</a> — Community threat intelligence feeds and IOCs.</li>
+        <li><a href="https://abuseipdb.com" target="_blank">AbuseIPDB</a> — Reports and reputation scoring for IP addresses.</li>
+        <li><a href="https://www.greynoise.io" target="_blank">GreyNoise</a> — Distinguishes internet background noise from targeted scanning.</li>
+      </ul>
+
+      <!-- 11. Reputation & Sentiment OSINT -->
+      <h3>11. Reputation &amp; Sentiment OSINT Tools</h3>
+      <ul>
+        <li><a href="https://www.trustpilot.com" target="_blank">Trustpilot</a> — Customer reviews and sentiment for businesses.</li>
+        <li><a href="https://www.bbb.org" target="_blank">Better Business Bureau</a> — Complaints, ratings, and accreditation info (US/Canada).</li>
+        <li><a href="https://glassdoor.com" target="_blank">Glassdoor</a> — Employee reviews and anonymous sentiment around companies.</li>
+        <li><a href="https://news.google.com" target="_blank">Google News</a> — Aggregated news coverage and trend analysis.</li>
+        <li><a href="https://socialmention.com" target="_blank">Social Mention</a> — Simple social-media sentiment and mention tracking.</li>
+      </ul>
+
+      <!-- 12. Advanced Search & Technical OSINT -->
+      <h3>12. Advanced Search &amp; Technical OSINT Tools</h3>
+      <ul>
+        <li><a href="https://publicwww.com" target="_blank">PublicWWW</a> — Search websites by source-code snippets, scripts, and tracking IDs.</li>
+        <li><a href="https://urlscan.io" target="_blank">urlscan.io</a> — Analyze websites, scripts, and network calls for a given URL.</li>
+        <li><a href="https://shodan.io" target="_blank">Shodan</a> — Search engine for internet-exposed devices and services.</li>
+        <li><a href="https://search.censys.io" target="_blank">Censys</a> — Internet-scan search for hosts, certificates, and services.</li>
+        <li><a href="https://netlas.io" target="_blank">Netlas</a> — Internet-wide scanning platform with host and service search.</li>
+        <li><a href="https://securitytrails.com" target="_blank">SecurityTrails</a> — Historical DNS, IP, and domain infrastructure data.</li>
+        <li><a href="https://dnsdumpster.com" target="_blank">DNSDumpster</a> — Passive DNS mapping and subdomain discovery.</li>
+        <li><a href="https://builtwith.com" target="_blank">BuiltWith</a> — Web technology stack and hosting fingerprinting.</li>
+      </ul>
+
+      <!-- 13. Link Analysis, Timelines & Reporting -->
+      <h3>13. Link Analysis, Timelines &amp; Reporting Tools</h3>
+      <ul>
+        <li><a href="https://maltego.com" target="_blank">Maltego</a> — Graph-based link analysis for people, infrastructure, and relationships.</li>
+        <li><a href="https://obsidian.md" target="_blank">Obsidian (Canvas)</a> — Local knowledge graph and manual link-analysis workspace.</li>
+        <li><a href="https://graphistry.com" target="_blank">Graphistry</a> — GPU-accelerated graph visualization for complex OSINT datasets.</li>
+        <li><a href="https://gephi.org" target="_blank">Gephi</a> — Open-source network graph exploration and visualization platform.</li>
+        <li><a href="https://timeline.knightlab.com" target="_blank">TimelineJS</a> — Build interactive timelines from spreadsheet-based data.</li>
+        <li><a href="https://aeontimeline.com" target="_blank">Aeon Timeline</a> — Rich timeline and narrative mapping (paid desktop app).</li>
+        <li><a href="https://www.hunch.ly" target="_blank">Hunchly</a> — Web capture and case-management tool with chain-of-custody logging.</li>
+      </ul>
+
+    </div>
+  </details>
+</section>
+
+
+
+    <section id="sec-app-b" class="section-card" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">🎓</div>
+            <div class="section-title-text">
+              <span class="section-title-main">Appendix B – Misc, Training & Utilities</span>
+              <span class="section-title-sub">Non-core tools that still help you level up.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <ul>
+            <li><strong>GeoGuessr</strong> – train geolocation instincts visually.</li>
+            <li>OSINT reference sheets – people-finding and multi-category tool spreadsheets.</li>
+            <li>Timeline makers – for visualizing POI’s major life and account events.</li>
+          </ul>
+
+          <div class="notes-box" data-section="sec-app-b">
+            <div class="notes-box-header">
+              <div class="notes-label-left"><span class="icon">📝</span><span>Investigator Notes – Training & Extras</span></div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Track useful new tools, techniques, or training ideas you want to incorporate into future investigations."></textarea>
+            <div class="notes-hint">Treat this as your personal backlog for improving the methodology.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+<!-- Appendix C -->
+<section id="sec-app-c" class="section-card">
+  <details class="section-toggle">
+    <summary class="section-summary">
+      <div class="section-summary-left">
+        <div class="section-icon">📂</div>
+        <div class="section-title-text">
+          <span class="section-title-main">Appendix C – Master Google Dorking Library</span>
+          <span class="section-title-sub">A starting list of advanced search operators used in real investigations.</span>
+        </div>
+      </div>
+      <div class="section-chevron">▼</div>
+    </summary>
+
+    <div class="section-inner">
+      <h3>How to Use This Appendix</h3>
+      <p>This appendix provides a categorized list of real-world Google dorks frequently used by OSINT investigators, cybersecurity analysts, DFIR teams, and threat hunters to uncover misconfigurations, breaches, leaks, and open-source intelligence pivots.</p>
+
+      <p><strong>Tip:</strong> Replace generic terms with POI-specific identifiers (emails, usernames, domains, IPs, company names).</p>
+
+      <hr style="border-color:#1f2937;margin:14px 0;">
+
+      <!-- 1. Credential & Password Leaks -->
+      <h3>1. Credential & Password Leaks</h3>
+      <pre><code>intitle:"index of" "passwords.txt"
+"password" filetype:xls site:*
+"credentials" "admin" filetype:txt
+"db_password" ext:env OR ext:yml OR ext:json
+"AWS_SECRET_ACCESS_KEY" OR "AWS_ACCESS_KEY_ID"
+"password" "vnc" filetype:ini
+"PRIVATE KEY" ext:pem
+"ssh-rsa" "PRIVATE KEY"
+"config.php" "dbuser" "dbpass"
+intitle:config "db_password"</code></pre>
+
+      <!-- 2. Exposed Databases -->
+      <h3>2. Exposed Databases</h3>
+      <pre><code>filetype:sql "INSERT INTO" "VALUES"
+"phpMyAdmin" "Welcome to phpMyAdmin"
+"MongoDB" "url" filetype:log
+"Elasticsearch" "cluster" "health" "status"
+intitle:phpMyAdmin "localhost"
+inurl:/_all "elastic"
+inurl:8080 "kibana"</code></pre>
+
+      <!-- 3. Backup Leaks -->
+      <h3>3. Backup, Archive & Dump Leaks</h3>
+      <pre><code>intitle:"index of" "*.sql"
+intitle:"index of" "*.backup"
+intitle:"index of" "*.zip" "backup"
+intitle:"index of" "website.zip"
+"db_backup" ext:gz
+"backup" ext:7z OR ext:tar OR ext:rar</code></pre>
+
+      <!-- 4. Exposed Internal Docs -->
+      <h3>4. Internal Documents & Corporate Files</h3>
+      <pre><code>"confidential" "not for distribution" filetype:pdf
+"internal use only" filetype:pdf site:*
+"leaked" "draft" "confidential"
+"salary" "compensation" filetype:xls
+"vpn credentials" filetype:pdf
+"restricted" "confidential"</code></pre>
+
+      <!-- 5. Cloud Storage -->
+      <h3>5. Cloud Storage & Bucket Exposure</h3>
+      <pre><code>site:amazonaws.com "index of"
+"parent directory" site:amazonaws.com
+inurl:"blob.core.windows.net" "list"
+inurl:"storage.googleapis.com" "index of"
+site:supabase.co "public"
+site:firebaseio.com "auth"</code></pre>
+
+      <!-- 6. Config Files -->
+      <h3>6. Configuration Files Containing Secrets</h3>
+      <pre><code>intitle:"index of" "config.json"
+ext:env "DB_HOST" OR "DB_USER"
+ext:ini "mailserver" "smtp"
+"settings.py" "SECRET_KEY"
+"web.config" filetype:config "password"
+"docker-compose.yml" "MYSQL_ROOT_PASSWORD"</code></pre>
+
+      <!-- 7. Admin Panels -->
+      <h3>7. Admin Portals & Dashboard Logins</h3>
+      <pre><code>intitle:"Admin Login"
+"admin" "login" inurl:admin
+"Dashboard" "Welcome" inurl:cpanel
+intitle:phpMyAdmin "root"
+intitle:"Zabbix" "server"
+"Grafana" "Login" inurl:3000</code></pre>
+
+      <!-- 8. Cameras and IoT -->
+      <h3>8. Cameras, IoT & Exposed Devices</h3>
+      <pre><code>inurl:"view/view.shtml"
+intitle:"webcamXP"
+"Network Camera" "Live View"
+"index of" "axis-cgi"
+intitle:"D-Link" "Live Video"
+inurl:8080 "Camera"</code></pre>
+
+      <!-- 9. Log Files -->
+      <h3>9. Log Files Exposing Sensitive Information</h3>
+      <pre><code>filetype:log "error" "password"
+filetype:log "exception" "root@"
+"debug.log" "password"
+ext:log "login failed" "user"
+"apache" "access.log" filetype:log</code></pre>
+
+      <!-- 10. Code & Secrets -->
+      <h3>10. Code Repos & Secret Exposure</h3>
+      <pre><code>site:github.com "SECRET_KEY" "AWS"
+site:gitlab.com "password" "mysql"
+"API_KEY" "token" ext:js
+"firebase" "apiKey" ext:json
+"supabase" "publicKey" -docs
+"smtp" "password" ext:py</code></pre>
+
+      <!-- 11. Breach Recon -->
+      <h3>11. Breach Recon & CVE Chaining</h3>
+      <pre><code>inurl:/wp-admin/install.php
+"index of" "wp-content/uploads"
+"Jenkins" "Create New Job"
+inurl:/solr/ "Dashboard"
+"SonarQube" "login"
+inurl:/cgi-bin/
+inurl:phpinfo.php</code></pre>
+
+      <!-- 12. Infrastructure -->
+      <h3>12. Network, Infra & Device Control Panels</h3>
+      <pre><code>"Dell iDRAC" "Login"
+"Cisco" "Login" "ASA"
+"Fortinet" "Login"
+inurl:monitoring "icinga"
+"Nagios Core" "Login"
+"LibreNMS" "Login"</code></pre>
+
+      <!-- 13. API & Dev Panels -->
+      <h3>13. API Documentation, Swagger & Dev Interfaces</h3>
+      <pre><code>"Swagger UI" "Explore"
+intitle:"GraphQL Playground"
+intitle:"API Documentation" "Bearer"
+inurl:/graphql "Introspection"</code></pre>
+
+      <hr style="border-color:#1f2937;margin:18px 0;">
+
+      <p>This library contains advanced, field-tested search operators used by professionals to identify misconfigurations, exposed assets, OSINT pivots, and breach indicators. For best results, combine these dorks with POI-specific data such as email domains, usernames, or company names.</p>
+
+    </div>
+  </details>
+</section>
+
+
+    <!-- Appendix D -->
+    <section id="sec-app-d" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">📝</div>
+            <div class="section-title-text">
+              <span class="section-title-main">Appendix D – Executive Summary & Report Template</span>
+              <span class="section-title-sub">A structured template for final OSINT reporting.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <h3>Executive Summary Template</h3>
+          <textarea style="width:100%;height:140px;padding:8px;">Provide a high-level overview of the investigation...</textarea>
+          <h3>Risk Findings Builder</h3>
+          <textarea style="width:100%;height:140px;padding:8px;">List the most relevant risks with evidence links...</textarea>
+        </div>
+      </details>
+    </section>
+
+    <!-- Appendix E -->
+    <section id="sec-app-e" class="section-card">
+      <details class="section-toggle">
+        <summary class="section-summary">
+          <div class="section-summary-left">
+            <div class="section-icon">⚖️</div>
+            <div class="section-title-text">
+              <span class="section-title-main">Appendix E – People OSINT Risk Scoring Model</span>
+              <span class="section-title-sub">Standardized scoring for identity, reputation, and threat indicators.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <h3>Risk Scoring Rubric</h3>
+          <ul>
+            <li><strong>Identity Confidence:</strong> 1–5 scale</li>
+            <li><strong>Social Footprint Risk:</strong> 1–5 scale</li>
+            <li><strong>Threat Activity Risk:</strong> 1–5 scale</li>
+            <li><strong>Breach Exposure Severity:</strong> 1–5 scale</li>
+          </ul>
+          <h3>Final Weighted Score</h3>
+          <input style="width:100%;padding:6px;" placeholder="Enter calculated risk score (0–100)">
+        </div>
+      </details>
+    </section>
+
+
+<!-- Appendix G -->
+<section id="sec-app-g" class="section-card">
+<details class="section-toggle">
+<summary class="section-summary">
+<div class="section-summary-left">
+<div class="section-icon">🗺️</div>
+<div class="section-title-text">
+<span class="section-title-main">Appendix F – Geolocation & Metadata Workbook</span>
+<span class="section-title-sub">Deep geolocation, image forensics, and metadata extraction.</span>
+</div></div><div class="section-chevron">▼</div></summary>
+<div class="section-inner">
+<h3>1. Scene Analysis Worksheet</h3>
+<textarea style="width:100%;height:120px;padding:6px;" placeholder="Landmarks, terrain, signs, road markings, shadows..."></textarea>
+<h3>2. Metadata Extraction Tools</h3>
+<ul>
+<li><a href="https://exifdata.com" target="_blank">ExifData</a></li>
+<li><a href="https://metadata2go.com" target="_blank">Metadata2Go</a></li>
+<li><a href="https://get-metadata.com" target="_blank">Get‑Metadata</a></li>
+</ul>
+<h3>G.3 Geolocation Confidence</h3>
+<input style="width:100%;padding:6px;" placeholder="High / Medium / Low">
+</div></details></section>
+
+<!-- Appendix G -->
+<section id="sec-app-h" class="section-card">
+<details class="section-toggle">
+<summary class="section-summary">
+<div class="section-summary-left">
+<div class="section-icon">🤖</div>
+<div class="section-title-text">
+<span class="section-title-main">Appendix G – AI‑Assisted OSINT Workflow</span>
+<span class="section-title-sub">Using local LLMs to accelerate OSINT analysis.</span>
+</div></div><div class="section-chevron">▼</div></summary>
+<div class="section-inner">
+<h3>1 Local AI Tools</h3>
+<ul>
+<li>Ollama (Mistral, LLaMA models)</li>
+<li>LM Studio</li>
+<li>GPT4All</li>
+</ul>
+<h3>2 Suggested AI‑Driven Tasks</h3>
+<ul>
+<li>Summarize long web pages</li>
+<li>Extract identifiers from text dumps</li>
+<li>Generate pivot maps</li>
+<li>Classify risk signals</li>
+</ul>
+<h3>3 Notes</h3>
+<textarea style="width:100%;height:120px;padding:6px;" placeholder="Your AI workflow notes..."></textarea>
+</div></details></section>
+
+
+
+</main>
+
+  
+
+
+
+
+
+
+
+<!-- JSZip for ZIP creation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+(function() {
+  const NOTES_PREFIX = 'osint_bg_notes_';
+  const FIELD_PREFIX = 'osint_bg_field_';
+
+  // In-memory attachment list only (no localStorage)
+  let attachmentsList = [];
+
+  function eachNode(list, fn) {
+    Array.prototype.forEach.call(list, fn);
+  }
+
+  // ---- NOTES (per-section investigator notes) ----
+  function initNotes() {
+    const boxes = document.querySelectorAll('.notes-box');
+    boxes.forEach(box => {
+      const sectionId = box.getAttribute('data-section');
+      const textarea = box.querySelector('.section-notes');
+      const status = box.querySelector('.notes-status');
+      if (!sectionId || !textarea) return;
+
+      const saved = localStorage.getItem(NOTES_PREFIX + sectionId);
+      if (saved !== null) {
+        textarea.value = saved;
+        if (status) status.textContent = '✔ Saved';
+      }
+
+      textarea.addEventListener('input', () => {
+        localStorage.setItem(NOTES_PREFIX + sectionId, textarea.value);
+        if (status) status.textContent = '✔ Saved';
+      });
+    });
+  }
+
+  // ---- FIELD AUTOSAVE (all other inputs/textarea) ----
+  function initFieldPersistence() {
+    const fields = document.querySelectorAll('input, textarea');
+    fields.forEach((el, idx) => {
+      if (el.id === 'global-search') return;
+      if (el.classList.contains('section-notes')) return;
+      if (el.type === 'file') return;
+
+      const key = FIELD_PREFIX + idx;
+      const saved = localStorage.getItem(key);
+      if (saved !== null) el.value = saved;
+
+      el.addEventListener('input', () => {
+        localStorage.setItem(key, el.value);
+      });
+    });
+  }
+
+  // ---- CLEAR EVERYTHING (notes + fields + in-memory attachments) ----
+  function clearAll() {
+    if (!confirm('Clear all saved notes, form data, and current attachments for this manual on this device?')) return;
+
+    // Notes
+    document.querySelectorAll('.notes-box').forEach(box => {
+      const sectionId = box.getAttribute('data-section');
+      const textarea = box.querySelector('.section-notes');
+      const status = box.querySelector('.notes-status');
+      if (!sectionId || !textarea) return;
+      textarea.value = '';
+      localStorage.removeItem(NOTES_PREFIX + sectionId);
+      if (status) status.textContent = '';
+    });
+
+    // Fields
+    const fields = document.querySelectorAll('input, textarea');
+    fields.forEach((el, idx) => {
+      if (el.id === 'global-search') return;
+      if (el.classList.contains('section-notes')) return;
+      if (el.type === 'file') return;
+      el.value = '';
+      localStorage.removeItem(FIELD_PREFIX + idx);
+    });
+
+    // Attachments (in memory)
+    attachmentsList = [];
+    const list = document.getElementById('attachments-list');
+    if (list) list.innerHTML = '<p>No attachments added yet.</p>';
+  }
+
+  // ---- EXPORT (notes + fields + attachment metadata only) ----
+  function getSectionTitleForEl(el) {
+    let current = el;
+    while (current) {
+      if (current.classList && current.classList.contains('section-card')) {
+        const titleEl = current.querySelector('.section-title-main');
+        if (titleEl) return titleEl.textContent.trim();
+        const h = current.querySelector('h2, h3');
+        if (h) return h.textContent.trim();
+      }
+      current = current.parentElement;
+    }
+    return 'Global';
+  }
+
+  function getFieldLabel(el) {
+    const li = el.closest('li');
+    if (li) {
+      const strong = li.querySelector('strong');
+      if (strong) return strong.textContent.replace(':', '').trim();
+    }
+    const label = el.closest('label') || (el.parentElement && el.parentElement.querySelector('label'));
+    if (label) return label.textContent.replace(':', '').trim();
+    if (el.placeholder) return el.placeholder.trim();
+    return 'Field';
+  }
+
+  function exportAll() {
+    const out = {
+      meta: {
+        exported_at: new Date().toISOString(),
+        format: 'osint_manual_v2'
+      },
+      notes: {},
+      fields: {},
+      attachments: attachmentsList.map(a => ({
+        filename: a.name,
+        timestamp: a.timestamp
+      }))
+    };
+
+    // Notes
+    document.querySelectorAll('.notes-box').forEach(box => {
+      const sectionId = box.getAttribute('data-section');
+      const textarea = box.querySelector('.section-notes');
+      if (!sectionId || !textarea) return;
+      out.notes[sectionId] = textarea.value || '';
+    });
+
+    // Fields
+    const fields = document.querySelectorAll('input, textarea');
+    fields.forEach(el => {
+      if (el.id === 'global-search') return;
+      if (el.classList.contains('section-notes')) return;
+      if (el.type === 'file') return;
+      const sectionTitle = getSectionTitleForEl(el);
+      const label = getFieldLabel(el);
+      if (!out.fields[sectionTitle]) out.fields[sectionTitle] = {};
+      out.fields[sectionTitle][label] = el.value || '';
+    });
+
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    a.href = url;
+    a.download = 'osint_manual_export_' + ts + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- NAVIGATION (sidebar links + active section highlighting) ----
+  function initNav() {
+    const links = document.querySelectorAll('#nav-list a');
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (!href || !href.startsWith('#')) return;
+        const target = document.querySelector(href);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', href);
+      });
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = entry.target.getAttribute('id');
+        if (!id) return;
+        const link = document.querySelector('#nav-list a[href="#' + id + '"]');
+        if (!link) return;
+        if (entry.isIntersecting) {
+          document.querySelectorAll('#nav-list a').forEach(a => a.classList.remove('active'));
+          link.classList.add('active');
+        }
+      });
+    }, {
+      rootMargin: '-40% 0px -50% 0px',
+      threshold: 0.1
+    });
+
+    document.querySelectorAll('main section[id]').forEach(sec => observer.observe(sec));
+  }
+
+  // ---- EXPAND / COLLAPSE ALL ----
+  function initExpandCollapse() {
+    const expandBtn = document.getElementById('btn-expand-all');
+    const collapseBtn = document.getElementById('btn-collapse-all');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', () => {
+        document.querySelectorAll('details.section-toggle').forEach(det => det.open = true);
+      });
+    }
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        document.querySelectorAll('details.section-toggle').forEach(det => det.open = false);
+      });
+    }
+  }
+
+  // ---- GLOBAL SEARCH ----
+  function initSearch() {
+    const searchInput = document.getElementById('global-search');
+    if (!searchInput) return;
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      document.querySelectorAll('.section-card').forEach(sec => {
+        const text = sec.innerText.toLowerCase();
+        sec.style.display = text.includes(q) ? 'block' : 'none';
+      });
+    });
+  }
+
+  // ---- ATTACHMENTS (in-memory + ZIP export) ----
+  function renderAttachments() {
+    const container = document.getElementById('attachments-list');
+    if (!container) return;
+    const list = attachmentsList;
+    container.innerHTML = '';
+
+    if (!list.length) {
+      const p = document.createElement('p');
+      p.textContent = 'No attachments added yet.';
+      container.appendChild(p);
+      return;
+    }
+
+    list.forEach((att, idx) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.padding = '6px 0';
+      row.style.borderBottom = '1px solid #1f2933';
+
+      const img = document.createElement('img');
+      img.src = att.preview;
+      img.style.width = '60px';
+      img.style.height = '60px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '6px';
+      img.style.marginRight = '10px';
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', () => openAttachmentModal(att));
+
+      const meta = document.createElement('div');
+      meta.style.flex = '1';
+      const name = document.createElement('div');
+      name.textContent = att.name || 'Attachment';
+      name.style.fontWeight = '600';
+      const ts = document.createElement('div');
+      ts.textContent = att.timestamp || '';
+      ts.style.fontSize = '12px';
+      ts.style.color = '#9ca3af';
+      meta.appendChild(name);
+      meta.appendChild(ts);
+
+      const del = document.createElement('button');
+      del.textContent = '❌ Delete';
+      del.className = 'btn';
+      del.style.padding = '4px 8px';
+      del.addEventListener('click', () => {
+        attachmentsList.splice(idx, 1);
+        renderAttachments();
+      });
+
+      row.appendChild(img);
+      row.appendChild(meta);
+      row.appendChild(del);
+      container.appendChild(row);
+    });
+  }
+
+  function openAttachmentModal(att) {
+    let modal = document.getElementById('attachment-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'attachment-modal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.background = 'rgba(0,0,0,0.7)';
+      modal.style.display = 'flex';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      modal.style.zIndex = '100000';
+
+      const box = document.createElement('div');
+      box.style.background = '#111827';
+      box.style.padding = '10px';
+      box.style.borderRadius = '8px';
+      box.style.maxWidth = '90%';
+      box.style.maxHeight = '90%';
+      box.style.display = 'flex';
+      box.style.flexDirection = 'column';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.className = 'btn';
+      closeBtn.style.marginBottom = '8px';
+      closeBtn.addEventListener('click', () => modal.remove());
+
+      const img = document.createElement('img');
+      img.id = 'attachment-modal-img';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '80vh';
+      img.style.borderRadius = '6px';
+
+      box.appendChild(closeBtn);
+      box.appendChild(img);
+      modal.appendChild(box);
+      document.body.appendChild(modal);
+    }
+
+    const imgEl = document.getElementById('attachment-modal-img');
+    if (imgEl) {
+      imgEl.src = att.preview;
+      imgEl.alt = att.name || 'Attachment';
+    }
+  }
+
+  function showAttachmentStatus() {
+    const status = document.getElementById('attachment-status');
+    if (!status) return;
+    status.style.display = 'inline';
+    setTimeout(() => {
+      status.style.display = 'none';
+    }, 1000);
+  }
+
+  function addAttachment() {
+    const input = document.getElementById('attachment-input');
+    if (!input || !input.files || !input.files.length) {
+      alert('Please choose an image file first.');
+      return;
+    }
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      attachmentsList.push({
+        name: file.name,
+        timestamp: new Date().toLocaleString(),
+        file: file,
+        preview: e.target.result
+      });
+      renderAttachments();
+      input.value = '';
+      showAttachmentStatus();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function downloadAttachmentsZip() {
+    if (!attachmentsList.length) {
+      alert('No attachments to download.');
+      return;
+    }
+    if (typeof JSZip === 'undefined') {
+      alert('ZIP library not loaded. Check your internet connection.');
+      return;
+    }
+    const zip = new JSZip();
+    attachmentsList.forEach((att, idx) => {
+      const fname = att.name || ('attachment_' + (idx + 1));
+      zip.file(fname, att.file);
+    });
+    const manifest = attachmentsList.map(a => ({
+      filename: a.name,
+      timestamp: a.timestamp
+    }));
+    zip.file('attachments_manifest.json', JSON.stringify(manifest, null, 2));
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'osint_attachments_' + ts + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
+  function initAttachments() {
+    const addBtn = document.getElementById('btn-add-attachment');
+    if (addBtn) addBtn.addEventListener('click', addAttachment);
+
+    const zipBtn = document.getElementById('btn-download-attachments');
+    if (zipBtn) zipBtn.addEventListener('click', downloadAttachmentsZip);
+
+    renderAttachments();
+  }
+
+  // ---- INIT ----
+  function initAll() {
+    initNotes();
+    initFieldPersistence();
+    initNav();
+    initExpandCollapse();
+    initSearch();
+    initAttachments();
+
+    const exportBtn = document.getElementById('btn-export-notes');
+    const clearBtn = document.getElementById('btn-clear-notes');
+    if (exportBtn) exportBtn.addEventListener('click', exportAll);
+    if (clearBtn) clearBtn.addEventListener('click', clearAll);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+})();
+</script>
+
+
+<script>
+/* Replace all <input> fields with <textarea> fields while preserving
+   placeholder, value, styles, and sizing */
+
+document.querySelectorAll('input').forEach(input => {
+  const textarea = document.createElement('textarea');
+
+  // Copy main attributes
+  textarea.placeholder = input.placeholder || "";
+  textarea.value = input.value || "";
+
+  // Copy inline styles
+  textarea.style.cssText = input.style.cssText;
+
+  // Set textarea minimum height (so it behaves like input initially)
+  if (!textarea.style.height) {
+    textarea.style.height = "38px";
+  }
+
+  // Allow vertical expansion
+  textarea.style.resize = "vertical";
+
+  // Match styling to your notes fields
+  textarea.style.background = "#020617";
+  textarea.style.color = "var(--text-main)";
+  textarea.style.border = "1px solid var(--note-border)";
+  textarea.style.borderRadius = "8px";
+  textarea.style.padding = "6px";
+
+  // Replace the input with the textarea
+  input.replaceWith(textarea);
+});
+</script>
+
+
+</body>
+</html>
