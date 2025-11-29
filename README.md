@@ -5,7 +5,6 @@ A powerful, fully interactive OSINT investigation manual—offline, private, and
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OSINT POI Background Investigation Manual – Project Overview</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827; max-width: 900px; margin: 0 auto; padding: 24px;">
