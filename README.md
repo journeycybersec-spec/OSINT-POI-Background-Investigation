@@ -272,25 +272,5 @@ A powerful, fully interactive OSINT investigation manual—offline, private, and
 
   <hr>
 
-  <h2>🎯 Final Pitch</h2>
-  <p>
-    If you want a <strong>professional-grade OSINT workflow</strong> that is:
-  </p>
-  <ul>
-    <li>Portable</li>
-    <li>Private</li>
-    <li>Comprehensive</li>
-    <li>Field-ready</li>
-    <li>Training-ready</li>
-  </ul>
-
-  <p>
-    …this project gives you a complete, clickable operating manual for conducting POI investigations
-    at any skill level. It replaces scattered notes and improvised methods with a polished,
-    unified OSINT system.
-  </p>
-
-  <p><strong>Clone it, open the HTML, and start investigating.</strong></p>
-
 </body>
 </html>
